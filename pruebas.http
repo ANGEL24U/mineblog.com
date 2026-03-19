@@ -1,0 +1,14 @@
+### Leer todos los artículos (GET)
+GET http://localhost:3000/api/articulos
+
+
+### Crear un artículo nuevo (POST)
+POST http://localhost:3000/api/articulos
+Content-Type: application/json
+
+{
+  "titulo": "Prueba desde Codespaces",
+  "contenido": "¡Logré evadir el cobro de Thunder Client y mi API funciona en la nube!",
+  "categoria_id": 1,
+  "autor_id": 1
+}
