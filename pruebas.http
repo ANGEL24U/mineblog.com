@@ -12,3 +12,13 @@ Content-Type: application/json
   "categoria_id": 1,
   "autor_id": 1
 }
+
+### Registrar un usuario nuevo
+POST http://localhost:3000/api/registro
+Content-Type: application/json
+
+{
+  "nombre_usuario": "Steve",
+  "correo": "steve@mina.com",
+  "contrasena": "diamante123"
+}

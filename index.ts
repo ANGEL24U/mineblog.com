@@ -1,6 +1,7 @@
 import express = require('express');
 import sql = require('mssql');
-import cors = require('cors'); // 1. IMPORTAMOS CORS AQUÍ ARRIBA
+import cors = require('cors');
+import bcrypt = require('bcryptjs'); // ¡NUEVO! Importamos la herramienta de encriptación
 
 const app = express();
 const puerto = 3000;
@@ -57,35 +58,47 @@ app.get('/api/articulos', async (req, res) => {
   }
 });
 
-// ¡NUEVA RUTA (POST)! Para CREAR un artículo nuevo
-app.post('/api/articulos', async (req, res) => {
+// ¡NUEVA RUTA! Registro de un nuevo usuario
+app.post('/api/registro', async (req, res) => {
   try {
-    // 1. Extraemos los datos que nos envía Thunder Client
-    const { titulo, contenido, categoria_id, autor_id } = req.body;
+    // 1. Recibimos los datos del nuevo usuario desde el Frontend
+    const { nombre_usuario, correo, contrasena } = req.body;
 
-    // 2. Preparamos la consulta SQL de forma segura (evitando inyecciones SQL)
+    // 2. Generamos la encriptación (El "salt" le agrega ruido aleatorio para más seguridad)
+    const salt = await bcrypt.genSalt(10); 
+    const contrasenaHash = await bcrypt.hash(contrasena, salt);
+
+    // 3. Preparamos la consulta para la base de datos
     const request = new sql.Request();
-    request.input('titulo', sql.VarChar, titulo);
-    request.input('contenido', sql.VarChar, contenido);
-    request.input('categoria_id', sql.Int, categoria_id);
-    request.input('autor_id', sql.Int, autor_id);
+    request.input('nombre_usuario', sql.VarChar, nombre_usuario);
+    request.input('correo', sql.VarChar, correo);
+    
+    // OJO: Guardamos la contraseña encriptada, NUNCA la original
+    request.input('contrasena_encriptada', sql.VarChar, contrasenaHash);
 
     const query = `
-      INSERT INTO Articulos (titulo, contenido, categoria_id, autor_id)
-      VALUES (@titulo, @contenido, @categoria_id, @autor_id)
+      INSERT INTO Usuarios (nombre_usuario, correo, contrasena_encriptada)
+      VALUES (@nombre_usuario, @correo, @contrasena_encriptada)
     `;
 
-    // 3. Ejecutamos la inserción en la base de datos
+    // 4. Ejecutamos el guardado
     await request.query(query);
     
-    // 4. Respondemos que todo salió bien (Código 201 significa "Creado")
-    res.status(201).send('¡Artículo creado con éxito en SQL Server!');
-  } catch (error) {
-    console.error('Error al crear el artículo:', error);
-    res.status(500).send('Hubo un error al guardar el artículo.');
+    res.status(201).send('¡Bienvenido! Usuario registrado con éxito.');
+
+  } catch (error: any) {
+    console.error('Error al registrar usuario:', error);
+    
+    // Si el error es el número 2627 en SQL Server, significa que el correo ya existe (UNIQUE)
+    if (error.number === 2627) {
+      return res.status(400).send('Error: Ese correo electrónico ya está registrado.');
+    }
+    
+    res.status(500).send('Hubo un error interno al registrar el usuario.');
   }
 });
 
+// Esta tiene que ser SIEMPRE la última parte de tu archivo index.ts
 app.listen(puerto, () => {
-  console.log(`🚀 Servidor escuchando en http://localhost:${puerto}`);
+  console.log(`🚀 Servidor escuchando en http://localhost:${3000}`);
 });
