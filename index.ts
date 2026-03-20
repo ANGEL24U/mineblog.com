@@ -1,16 +1,18 @@
 import express = require('express');
 import sql = require('mssql');
+import cors = require('cors'); // 1. IMPORTAMOS CORS AQUÍ ARRIBA
 
 const app = express();
 const puerto = 3000;
 
-// ¡NUEVO! Este es el "traductor". Permite que Express entienda el JSON que enviaremos
-app.use(express.json());
+// Permite que Express entienda el JSON que se envía (es como un traductor)
+app.use(express.json()); 
+app.use(cors()); // Esto es para darle permisos a la web
 
-// Configuración de tu base de datos
+// Configuración de la base de datos
 const dbConfig = {
   user: 'sa',
-  password: 'xc3v_183', // <-- ¡Tu contraseña real de SQL Server!
+  password: 'xc3v_183',
   server: 'localhost', 
   database: 'MinecraftBlogDB',
   options: {
@@ -28,12 +30,27 @@ sql.connect(dbConfig).then(() => {
   console.error("❌ Error conectando a la base de datos:", err);
 });
 
-// Ruta de leer artículos (GET)
+// Ruta de leer artículos (GET) - CON JOINs
 app.get('/api/articulos', async (req, res) => {
-    try {
-    const resultado = await sql.query('SELECT * FROM Articulos');
-    res.json(resultado.recordset); 
+  try {
+    // Usamos INNER JOIN para traer el nombre del autor y de la categoría
+    const query = `
+      SELECT 
+        A.id, 
+        A.titulo, 
+        A.contenido, 
+        C.nombre_categoria AS categoria, 
+        U.nombre_usuario AS autor, 
+        A.fecha_publicacion
+      FROM Articulos A
+      INNER JOIN Categorias C ON A.categoria_id = C.id
+      INNER JOIN Usuarios U ON A.autor_id = U.id
+    `;
     
+    const resultado = await sql.query(query);
+    
+    // Devolvemos los datos ya procesados y listos para el frontend
+    res.json(resultado.recordset); 
   } catch (error) {
     console.error('Error al obtener los artículos:', error);
     res.status(500).send('Hubo un error en el servidor al buscar los artículos.');

@@ -1,0 +1,55 @@
+body { 
+    font-family: 'VT323', monospace; 
+    background-color: #8b8b8b; 
+    background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0,0,0,0.05) 10px, rgba(0,0,0,0.05) 20px);
+    margin: 0; 
+    padding: 0; 
+    color: #333;
+    font-size: 20px;
+}
+
+#contenedor-principal {
+    width: 900px;
+    margin: 20px auto;
+    background: #c6c6c6; 
+    border: 4px solid #000;
+    box-shadow: inset -4px -4px 0px rgba(0,0,0,0.2), inset 4px 4px 0px rgba(255,255,255,0.5);
+    padding: 20px;
+}
+
+header {
+    background-color: #4CAF50; 
+    border: 4px solid #388E3C;
+    text-align: center;
+    padding: 30px;
+    margin-bottom: 20px;
+    color: white;
+    text-shadow: 2px 2px 0px #000;
+}
+
+header h1 { margin: 0; font-size: 40px; }
+
+#layout-columnas { display: flex; gap: 20px; }
+#columna-articulos { width: 70%; }
+
+#columna-sidebar { 
+    width: 30%; 
+    background: #a0a0a0;
+    border: 4px solid #555;
+    padding: 15px;
+    height: fit-content;
+}
+
+.articulo { 
+    background: #dbdbdb; 
+    border: 2px solid #555; 
+    padding: 15px; 
+    margin-bottom: 20px; 
+}
+
+.articulo h2 { margin-top: 0; color: #111; border-bottom: 2px dashed #888; padding-bottom: 5px; }
+.autor-fecha { color: #555; font-size: 0.9em; }
+.categoria { background: #388E3C; color: white; padding: 2px 8px; font-size: 0.8em; }
+
+.sidebar-links { list-style: square; padding-left: 20px; }
+.sidebar-links li { margin-bottom: 10px; color: blue; text-decoration: underline; cursor: pointer; }
