@@ -53,3 +53,81 @@ header h1 { margin: 0; font-size: 40px; }
 
 .sidebar-links { list-style: square; padding-left: 20px; }
 .sidebar-links li { margin-bottom: 10px; color: blue; text-decoration: underline; cursor: pointer; }
+
+/* Obligamos a las imágenes dentro de los artículos a no salirse de la caja */
+.articulo img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 10px auto; /* Para centrarlas bonito */
+}
+
+/* --- DISEÑO EXCLUSIVO PARA LA PÁGINA DE LECTURA (articulo.html) --- */
+
+/* 1. Hacemos el contenedor principal mucho más ancho en esta página */
+.pagina-lectura #contenedor-principal {
+    width: 90% !important; /* Ocupamos casi todo el ancho de pantalla para que respire */
+    max-width: 1300px !important; /* Pero no lo dejamos crecer más allá de 1300px */
+    float: none; /* Lo centramos */
+    margin: 20px auto;
+}
+
+/* 2. Ajustamos el layout de columnas para aprovechar el espacio extra */
+.pagina-lectura #layout-columnas {
+    display: flex; /* Usamos Flexbox para alinear columnas, es más moderno y fácil */
+    justify-content: space-between;
+    width: 100%;
+}
+
+.pagina-lectura #vista-articulo-completo {
+    width: 75% !important; /* Un poco más de espacio para el artículo gigante */
+    float: none; /* Quitamos el float viejo */
+}
+
+.pagina-lectura #columna-sidebar {
+    width: 22% !important; /* Un poco menos para el sidebar, está bien */
+    float: none; /* Quitamos el float viejo */
+}
+
+/* 3. ¡Lo más importante! Le damos un "colchón" (padding) al texto para que no toque los bordes */
+/* Este estilo se aplica al div que inyecta CKEditor */
+.contenido-formateado {
+    text-align: left; /* Alineamos a la izquierda, es más legible */
+    line-height: 1.7; /* Aumentamos el interlineado para que sea más cómodo leer */
+    padding: 10px 40px; /* Agregamos colchón a los lados (40px) y arriba/abajo (10px) */
+    font-size: 22px; /* Aseguramos tamaño de fuente */
+}
+
+/* Aseguramos que los párrafos dentro de .contenido-formateado no toquen los bordes */
+.contenido-formateado p {
+    margin-bottom: 1.5em; /* Separación entre párrafos */
+    overflow-wrap: break-word; /* Evita que palabras largas rompan el layout */
+}
+
+/* 4. Reforzamos que las imágenes se ajusten y se vean bien */
+.contenido-formateado img {
+    max-width: 100%; /* No se salen de la caja */
+    height: auto;
+    border: 4px solid #555; /* Le damos un borde para que combine con la estética */
+    box-sizing: border-box; /* Incluimos el borde en el cálculo del ancho */
+    margin: 20px auto; /* Separación vertical y centrado horizontal */
+    display: block;
+}
+
+/* Obligamos a romper palabras larguísimas y adaptar textos preformateados */
+.contenido-formateado pre, 
+.contenido-formateado code {
+    white-space: pre-wrap !important; /* Fuerza el salto de línea */
+    word-wrap: break-word !important; 
+    max-width: 100%;
+}
+
+/* Blindaje general: nada dentro del contenido puede ser más ancho que la caja */
+.contenido-formateado * {
+    max-width: 100% !important;
+}
+
+/* Aseguramos que el fondo gris cubra todo y esconda desbordes accidentales */
+.articulo {
+    overflow: hidden; 
+}

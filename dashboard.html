@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administración - Minecraft Blog</title>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="contenedor-principal">
+        <header style="background-color: #d32f2f; border-color: #b71c1c;">
+            <h1>⚙️ PANEL DE ADMINISTRADOR ⚙️</h1>
+            <p>Centro de mando para creación de contenido</p>
+        </header>
+
+        <div id="layout-columnas">
+            <div id="columna-articulos">
+                <div class="articulo">
+                    <h2>Escribir Nueva Guía</h2>
+                    
+                    <form id="formulario-publicar">
+                        <div style="margin-bottom: 15px;">
+                            <label style="font-weight: bold;">Título del post:</label><br>
+                            <input type="text" id="post-titulo" required style="width: 95%; padding: 8px; font-family: 'VT323', monospace; font-size: 20px;">
+                        </div>
+                        
+                        <div style="margin-bottom: 15px;">
+                            <label style="font-weight: bold;">Categoría:</label><br>
+                            <select id="post-categoria" style="width: 98%; padding: 8px; font-family: 'VT323', monospace; font-size: 20px;">
+                                <option value="1">Guías y Tutoriales</option>
+                                </select>
+                        </div>
+
+                        <div style="margin-bottom: 15px;">
+                            <label style="font-weight: bold;">Contenido (El cuerpo del post):</label><br>
+                            <textarea id="post-contenido" name="post-contenido" rows="10" required style="width: 95%; padding: 8px; font-family: 'VT323', monospace; font-size: 20px; resize: vertical;"></textarea>
+                        </div>
+
+                        <button type="submit" style="background: #4CAF50; color: white; border: 4px solid #388E3C; padding: 10px 20px; font-family: 'VT323', monospace; font-size: 22px; cursor: pointer; text-shadow: 2px 2px 0px #000;">Publicar Artículo al Servidor</button>
+                    </form>
+                    
+                    <p id="mensaje-publicacion" style="margin-top: 15px; font-weight: bold; font-size: 22px;"></p>
+                    <hr style="border-top: 2px dashed #888; margin: 30px 0;">
+                    
+                    <h2>🛠️ Gestión de Artículos</h2>
+                    <p>Aquí puedes moderar las publicaciones de todos los usuarios.</p>
+                    
+                    <div id="admin-lista-articulos" style="text-align: left; background: #eee; border: 2px solid #555; padding: 10px;">
+                        <p>Cargando base de datos...</p>
+                    </div>
+
+
+                    <hr style="border-top: 2px dashed #888; margin: 30px 0;">
+                    
+                    <h2>🛡️ Gestión de Usuarios (Ban Hammer)</h2>
+                    <p>Administra quién tiene acceso al sistema.</p>
+                    
+                    <div id="admin-lista-usuarios" style="text-align: left; background: #eee; border: 2px solid #555; padding: 10px;">
+                        <p>Cargando lista de usuarios...</p>
+                    </div>
+
+                    <hr style="border-top: 2px dashed #888; margin: 30px 0;">
+                    
+                    <h2>🏷️ Añadir Nuevas Categorías</h2>
+                    <p>Crea nuevas secciones para clasificar los artículos del blog.</p>
+                    
+                    <form id="formulario-categoria" style="background: #eee; border: 2px solid #555; padding: 15px; text-align: left;">                        
+                        <label style="font-weight: bold;">Nombre de la categoría:</label><br>
+                        <input type="text" id="nueva-categoria" required placeholder="Ej: Texturas HD..." style="width: 60%; padding: 8px; font-family: 'VT323', monospace; font-size: 20px;">
+                        <button type="submit" style="background: #FF9800; color: white; border: 3px solid #E65100; cursor: pointer; font-family: 'VT323'; font-size: 20px; padding: 8px 15px;">➕ Crear Categoría</button>
+                        <p id="mensaje-categoria" style="margin-top: 10px; font-weight: bold;"></p>
+                    </form>
+                    <h3 style="margin-top: 20px;">Lista de Categorías Actuales:</h3>
+                    <div id="admin-lista-categorias" style="text-align: left; background: #fff; border: 1px solid #aaa; padding: 10px; max-height: 200px; overflow-y: auto;">
+                        <p>Cargando categorías...</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="columna-sidebar">
+                <h3>👤 Modo Admin</h3>
+                <p id="admin-nombre-display">Identificando...</p>
+                <hr>
+                <ul class="sidebar-links">
+                    <li><a href="index.html" style="color: #d32f2f; font-weight: bold;">← Salir al Blog</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.ckeditor.com/4.22.1/standard/ckeditor.js"></script>
+    <script>
+        // Le decimos que reemplace nuestra caja de texto por el editor profesional
+        CKEDITOR.replace('post-contenido');
+    </script>
+
+    <script src="script.js"></script>
+</body>
+</html>

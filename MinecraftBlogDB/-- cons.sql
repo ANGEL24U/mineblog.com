@@ -61,3 +61,5 @@ VALUES (
     1
 );
 GO
+
+SELECT * FROM Usuarios;

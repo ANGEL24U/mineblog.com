@@ -7,8 +7,8 @@ POST http://localhost:3000/api/articulos
 Content-Type: application/json
 
 {
-  "titulo": "Prueba desde Codespaces",
-  "contenido": "¡Logré evadir el cobro de Thunder Client y mi API funciona en la nube!",
+  "titulo": "Prueba desde mi PC Local",
+  "contenido": "¡Volví a casa, la base de datos está fresca y el servidor corre a la perfección!",
   "categoria_id": 1,
   "autor_id": 1
 }
