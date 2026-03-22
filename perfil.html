@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Perfil - Minecraft Blog</title>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="contenedor-principal">
+        <header>
+            <h1>⚙️ MI PERFIL ⚙️</h1>
+            <p>Personaliza tu cuenta y tu avatar</p>
+        </header>
+
+        <nav id="menu-principal">
+            <a href="index.html">Inicio</a>
+            <a href="jugar.html" style="color: #FFEB3B; text-shadow: 1px 1px #000;">🎮 Jugar Web</a>
+            <a href="construccion.html">Foro</a>
+            <a href="construccion.html">Descargar Mods</a>
+            <a href="construccion.html">Servidores</a>
+            
+            <div class="caja-buscar">
+                <input type="text" id="input-busqueda" placeholder="Buscar artículo...">
+                <button id="btn-buscar">🔍 Buscar</button>
+            </div>
+        </nav>
+
+        <div id="layout-columnas">
+            <div id="columna-articulos"> 
+                <div class="articulo" style="text-align: center;">
+                    
+                    <img id="preview-avatar" src="steve.png" style="width: 150px; height: 150px; border: 4px solid #555; background: #fff; margin-bottom: 20px; image-rendering: pixelated;">
+                    
+                    <form id="formulario-perfil" style="max-width: 500px; margin: 0 auto; text-align: left; background: #eee; padding: 20px; border: 2px dashed #888;">
+                        
+                        <div style="margin-bottom: 15px;">
+                            <label style="font-weight: bold;">Nombre de Usuario:</label><br>
+                            <input type="text" id="perfil-nombre" required style="width: 95%; padding: 8px; font-family: 'VT323'; font-size: 20px;">
+                        </div>
+
+                        <div style="margin-bottom: 15px;">
+                            <label style="font-weight: bold;">Descripción:</label><br>
+                            <textarea id="perfil-descripcion" rows="4" placeholder="Escribe algo sobre ti..." style="width: 95%; padding: 8px; font-family: 'VT323'; font-size: 20px; resize: vertical;"></textarea>
+                        </div>
+
+                        <div style="margin-bottom: 25px; text-align: center;">
+                            <input type="file" id="input-foto-archivo" accept="image/png, image/jpeg" style="display: none;">
+                            
+                            <button type="button" id="btn-cambiar-foto" style="background: #FF9800; color: white; border: 3px solid #E65100; cursor: pointer; font-family: 'VT323'; font-size: 20px; padding: 5px 15px;">📁 Cargar Foto desde Dispositivo</button>
+                            
+                            <br><small style="color: #666;">Máximo 2MB (PNG o JPG).</small>
+                        </div>
+                        
+                        <div style="margin-bottom: 15px;">
+                            <label style="font-weight: bold;">Nueva Contraseña:</label><br>
+                            <input type="password" id="perfil-contrasena" placeholder="Déjalo en blanco para no cambiarla" style="width: 95%; padding: 8px; font-family: 'VT323'; font-size: 20px;">
+                        </div>
+
+                        <button type="submit" style="background: #2196F3; color: white; border: 3px solid #0D47A1; cursor: pointer; font-family: 'VT323'; font-size: 22px; padding: 8px 20px; width: 100%;">💾 Guardar Cambios</button>
+                        <p id="mensaje-perfil" style="text-align: center; margin-top: 15px; font-weight: bold; font-size: 20px;"></p>
+                    </form>
+
+                </div>
+            </div>
+
+            <div id="columna-sidebar">
+                <div id="info-usuario">
+                    </div>
+            </div>
+        </div>
+    </div>
+
+    <footer id="pie-pagina">
+        <p>⛏️ MINECRAFT BLOG © 2026 - Desarrollado por Angel ⛏️</p>
+        <p style="color: #aaa; font-size: 18px;">No estamos afiliados con Mojang AB ni Microsoft Corporation.</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

@@ -15,6 +15,19 @@
             <p>Centro de mando para creación de contenido</p>
         </header>
 
+        <nav id="menu-principal">
+            <a href="index.html">Inicio</a>
+            <a href="jugar.html" style="color: #FFEB3B; text-shadow: 1px 1px #000;">🎮 Jugar Web</a>
+            <a href="construccion.html">Foro</a>
+            <a href="construccion.html">Descargar Mods</a>
+            <a href="construccion.html">Servidores</a>
+            
+            <div class="caja-buscar">
+                <input type="text" id="input-busqueda" placeholder="Buscar artículo...">
+                <button id="btn-buscar">🔍 Buscar</button>
+            </div>
+        </nav>
+
         <div id="layout-columnas">
             <div id="columna-articulos">
                 <div class="articulo">
@@ -38,7 +51,7 @@
                             <textarea id="post-contenido" name="post-contenido" rows="10" required style="width: 95%; padding: 8px; font-family: 'VT323', monospace; font-size: 20px; resize: vertical;"></textarea>
                         </div>
 
-                        <button type="submit" style="background: #4CAF50; color: white; border: 4px solid #388E3C; padding: 10px 20px; font-family: 'VT323', monospace; font-size: 22px; cursor: pointer; text-shadow: 2px 2px 0px #000;">Publicar Artículo al Servidor</button>
+                        <button type="submit" style="background: #4CAF50; color: white; border: 4px solid #388E3C; padding: 10px 20px; font-family: 'VT323', monospace; font-size: 22px; cursor: pointer; text-shadow: 2px 2px 0px #000;">Publicar</button>
                     </form>
                     
                     <p id="mensaje-publicacion" style="margin-top: 15px; font-weight: bold; font-size: 22px;"></p>
@@ -51,13 +64,23 @@
                         <p>Cargando base de datos...</p>
                     </div>
 
-
+                    <div id="zona-admin-exclusiva">
                     <hr style="border-top: 2px dashed #888; margin: 30px 0;">
                     
-                    <h2>🛡️ Gestión de Usuarios (Ban Hammer)</h2>
-                    <p>Administra quién tiene acceso al sistema.</p>
+                    <h2>🛡️ Gestión de Usuarios y Roles</h2>
+                    <p>Administra accesos, baneos y asigna roles de escritor masivamente.</p>
                     
-                    <div id="admin-lista-usuarios" style="text-align: left; background: #eee; border: 2px solid #555; padding: 10px;">
+                    <div style="background: #ccc; padding: 10px; border: 2px solid #555; margin-bottom: 10px;">
+                        <label style="font-weight: bold;">Acción Masiva (Usuarios seleccionados):</label>
+                        <select id="select-rol-masivo" style="padding: 5px; font-family: 'VT323'; font-size: 18px;">
+                            <option value="usuario">Quitar permisos (Volver a Usuario)</option>
+                            <option value="escritor">Ascender a Escritor</option>
+                            <option value="admin">Ascender a Administrador</option>
+                        </select>
+                        <button onclick="aplicarRolMasivo()" style="background: #2196F3; color: white; border: 2px solid #0D47A1; cursor: pointer; font-family: 'VT323'; font-size: 18px; padding: 5px 10px;">Aplicar Rol</button>
+                    </div>
+
+                    <div id="admin-lista-usuarios" style="text-align: left; background: #eee; border: 2px solid #555; padding: 10px; max-height: 250px; overflow-y: auto;">
                         <p>Cargando lista de usuarios...</p>
                     </div>
 
@@ -77,6 +100,7 @@
                         <p>Cargando categorías...</p>
                     </div>
                 </div>
+                </div>
             </div>
 
             <div id="columna-sidebar">
@@ -95,6 +119,11 @@
         // Le decimos que reemplace nuestra caja de texto por el editor profesional
         CKEDITOR.replace('post-contenido');
     </script>
+
+    <footer id="pie-pagina">
+        <p>⛏️ MINECRAFT BLOG © 2026 - Desarrollado por Angel ⛏️</p>
+        <p style="color: #aaa; font-size: 18px;">No estamos afiliados con Mojang AB ni Microsoft Corporation.</p>
+    </footer>
 
     <script src="script.js"></script>
 </body>

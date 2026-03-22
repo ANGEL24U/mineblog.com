@@ -16,19 +16,25 @@
             <p>Tu portal de guías, texturas y supervivencia</p>
         </header>
 
+        <nav id="menu-principal">
+            <a href="index.html">Inicio</a>
+            <a href="jugar.html" style="color: #FFEB3B; text-shadow: 1px 1px #000;">🎮 Jugar Web</a>
+            <a href="construccion.html">Foro</a>
+            <a href="construccion.html">Descargar Mods</a>
+            <a href="construccion.html">Servidores</a>
+            
+            <div class="caja-buscar">
+                <input type="text" id="input-busqueda" placeholder="Buscar artículo...">
+                <button id="btn-buscar">🔍 Buscar</button>
+            </div>
+        </nav>
+
         <div id="layout-columnas">
             <div id="columna-articulos">
                 <div id="cargando">Descargando terreno...</div>
             </div>
 
             <div id="columna-sidebar">
-                <h3>📜 Menú Principal</h3>
-                <ul class="sidebar-links">
-                    <li>Inicio</li>
-                    <li>Foro de Usuarios</li>
-                    <li>Descargar Mods</li>
-                    <li>Servidores (Online)</li>
-                </ul>
                 <hr>
                 
                 <h3>👤 Mi Perfil</h3>
@@ -44,7 +50,16 @@
                 <p>Usuarios registrados: 3</p>
             </div>
         </div>
+
+        <div id="paginacion-controles" style="text-align: center; margin-top: 30px; margin-bottom: 10px; display: none;">
+            </div>
+
     </div>
+
+    <footer id="pie-pagina">
+        <p>⛏️ MINECRAFT BLOG © 2026 - Desarrollado por Angel ⛏️</p>
+        <p style="color: #aaa; font-size: 18px;">No estamos afiliados con Mojang AB ni Microsoft Corporation.</p>
+    </footer>
 
     <script src="script.js"></script>
 </body>

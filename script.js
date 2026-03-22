@@ -1,28 +1,58 @@
 // script.js
-async function cargarArticulos() {
-    try {
-        const respuesta = await fetch('http://localhost:3000/api/articulos'); 
-        const articulos = await respuesta.json();
-        
-        const contenedor = document.getElementById('columna-articulos');
-        
-        // ¡EL NUEVO ESCUDO PARA EL DASHBOARD!
-        // Si detectamos que el formulario de publicar existe en la pantalla, abortamos la función para no borrarlo.
-        if (document.getElementById('formulario-publicar')) return; 
+// script.js - VERSIÓN ULTRA-PAGINADA (10 POR PÁGINA)
 
-        // El escudo anterior para cuando la columna no existe (ej: Login o Registro)
+async function cargarArticulos(terminoBusqueda = "") {
+    try {
+        const contenedor = document.getElementById('columna-articulos');
+        const controlesPaginacion = document.getElementById('paginacion-controles');
+        
+        // LOS ESCUDOS
+        if (document.getElementById('formulario-publicar')) return;
+        if (document.getElementById('formulario-perfil')) return; 
+        if (document.getElementById('tarjeta-perfil')) return; 
         if (!contenedor) return; 
+
+        contenedor.innerHTML = '<p>Cargando artículos...</p>'; 
+
+        // 1. OBTENEMOS LA PÁGINA ACTUAL DE LA URL
+        const urlParams = new URLSearchParams(window.location.search);
+        let paginaActual = parseInt(urlParams.get('pagina')) || 1; 
+
+        // 2. CONSTRUIMOS LA URL DEL SERVIDOR 
+        let fetchUrl = `http://localhost:3000/api/articulos?pagina=${paginaActual}&buscar=${terminoBusqueda}`;
+
+        const respuesta = await fetch(fetchUrl); 
+        
+        // Seguro contra caídas del servidor
+        if (!respuesta.ok) throw new Error("Error del servidor");
+
+        const datos = await respuesta.json(); 
+        
+        const listaArticulos = datos.articulos;
+        const infoPaginacion = datos.paginacion;
 
         contenedor.innerHTML = ''; 
 
-        articulos.forEach(art => {
-            // 1. Truco Ninja: Limpiamos las etiquetas HTML para sacar solo el texto puro
+        // 3. SI NO HAY RESULTADOS
+        if (listaArticulos.length === 0) {
+            let mensajeError = `No encontramos ningún artículo`;
+            if (terminoBusqueda) mensajeError += ` que coincida con <b>"${terminoBusqueda}"</b>.`;
+
+            contenedor.innerHTML = `
+                <div class="articulo" style="text-align: center; padding: 30px;">
+                    <h2 style="color: #d32f2f;">Sin resultados 😢</h2>
+                    <p style="font-size: 22px;">${mensajeError}</p>
+                    <button onclick="window.location.href='index.html'" style="margin-top: 15px; background: #388E3C; color: white; border: 2px solid #1B5E20; font-family: 'VT323'; font-size: 20px; cursor: pointer; padding: 5px 15px;">Ver todo</button>
+                </div>`;
+            if(controlesPaginacion) controlesPaginacion.style.display = 'none';
+            return;
+        }
+
+        // 4. IMPRIMIMOS LOS ARTÍCULOS
+        listaArticulos.forEach(art => {
             let textoPlano = art.contenido.replace(/<[^>]+>/g, '');
-            
-            // 2. Cortamos el texto a 150 caracteres para la vista previa
             let resumen = textoPlano.substring(0, 150) + '...';
 
-            // 3. Convertimos el título y agregamos un botón de "Leer más" con el ID del artículo
             const html = `
                 <div class="articulo">
                     <a href="articulo.html?id=${art.id}" style="text-decoration: none; color: inherit;">
@@ -31,18 +61,55 @@ async function cargarArticulos() {
                     <span class="categoria">${art.categoria}</span>
                     <p>${resumen}</p>
                     <p><a href="articulo.html?id=${art.id}" style="font-weight: bold; color: #d32f2f;">[Leer artículo completo]</a></p>
-                    <p class="autor-fecha">Posteado por: <b>${art.autor}</b> | ${new Date(art.fecha_publicacion).toLocaleDateString()}</p>
+                    <p class="autor-fecha">Posteado por: <b><a href="perfil-publico.html?usuario=${art.autor}" style="color: #0000EE; text-decoration: underline;">${art.autor}</a></b> | ${new Date(art.fecha_publicacion).toLocaleDateString()}</p>
                 </div>
             `;
             contenedor.innerHTML += html;
         });
 
+        // 5. PINTAMOS LOS BOTONES DE PAGINACIÓN
+        if(controlesPaginacion) {
+            renderizarControlesPaginacion(infoPaginacion, terminoBusqueda);
+        }
+
     } catch (error) {
         const contenedor = document.getElementById('columna-articulos');
-        if(contenedor) contenedor.innerHTML = "<p>Error: Se perdió la conexión con el servidor.</p>";
+        if(contenedor) contenedor.innerHTML = "<p style='color:red;'>Error: Se perdió la conexión con el servidor.</p>";
     }
 }
 
+// FUNCIONES DE PAGINACIÓN
+function renderizarControlesPaginacion(info, terminoBusqueda) {
+    const controles = document.getElementById('paginacion-controles');
+    if(!controles) return;
+    controles.innerHTML = ''; 
+
+    if (info.totalPaginas <= 1) {
+        controles.style.display = 'none';
+        return;
+    }
+
+    controles.style.display = 'block'; 
+    let htmlBotones = '';
+
+    const btnAnteriorDisabled = info.paginaActual === 1 ? 'disabled style="background: #9e9e9e; border-color: #757575; cursor: not-allowed; color: #555;"' : '';
+    htmlBotones += `<button onclick="cambiarPagina(${info.paginaActual - 1}, '${terminoBusqueda}')" ${btnAnteriorDisabled} class="btn-paginacion">⏪ Anterior</button>`;
+
+    htmlBotones += `<span style="font-size: 20px; font-weight: bold; margin: 0 10px;">Página ${info.paginaActual} de ${info.totalPaginas}</span>`;
+
+    const btnSiguienteDisabled = info.paginaActual === info.totalPaginas ? 'disabled style="background: #9e9e9e; border-color: #757575; cursor: not-allowed; color: #555;"' : '';
+    htmlBotones += `<button onclick="cambiarPagina(${info.paginaActual + 1}, '${terminoBusqueda}')" ${btnSiguienteDisabled} class="btn-paginacion">Siguiente ⏩</button>`;
+
+    controles.innerHTML = htmlBotones;
+}
+
+window.cambiarPagina = function(nuevaPagina, terminoBusqueda) {
+    window.history.pushState({}, '', `index.html?pagina=${nuevaPagina}&buscar=${terminoBusqueda}`);
+    cargarArticulos(terminoBusqueda);
+    window.scrollTo(0, 0);
+}
+
+// Iniciar carga
 cargarArticulos();
 
 // --- LÓGICA DE LOGIN ---
@@ -135,26 +202,49 @@ function verificarSesion() {
     const usuarioGuardado = localStorage.getItem('usuarioLogeado');
 
     if (usuarioGuardado) {
-        // Convertimos el texto guardado de vuelta a un objeto de JavaScript
+        // Leemos la memoria del navegador
         const usuario = JSON.parse(usuarioGuardado);
         
-        // Armamos el HTML con los datos del usuario
-        let htmlPerfil = `
+        // ¡NUEVO! Detectamos si estamos en la página de perfil
+        const esPaginaPerfil = window.location.pathname.includes('perfil.html');
+        
+        // Extraemos la foto (ahora apuntando a tu carpeta img/)
+        const fotoUsuario = usuario.foto_perfil || 'img/steve.png';
+
+        let htmlPerfil = ``;
+
+        // Si NO estamos en el perfil, dibujamos la foto pequeña
+        if (!esPaginaPerfil) {
+            htmlPerfil += `
+            <div style="text-align: center; margin-bottom: 15px;">
+                <img src="${fotoUsuario}" style="width: 80px; height: 80px; border: 3px solid #555; background: #fff; image-rendering: pixelated;">
+            </div>`;
+        }
+
+        // Agregamos el nombre y el rango (esto siempre se ve)
+        htmlPerfil += `
             <p style="margin-bottom: 5px;">Bienvenido, <b>${usuario.nombre}</b></p>
             <p style="margin-top: 0;">Rango: <span class="categoria" style="background: ${usuario.rol === 'admin' ? '#d32f2f' : '#388E3C'}">${usuario.rol.toUpperCase()}</span></p>
             <ul class="sidebar-links">
         `;
 
-        // ¡EL BOTÓN SECRETO! Solo aparece si eres administrador
+        // Si NO estamos en el perfil, mostramos el botón de Editar
+        if (!esPaginaPerfil) {
+            htmlPerfil += `<li><a href="perfil.html" style="color: #0000EE; font-weight: bold;">⚙️ Editar Mi Perfil</a></li>`;
+        }
+
+        // ¡EL BOTÓN SECRETO! Administradores y Escritores tienen acceso al Dashboard
         if (usuario.rol === 'admin') {
-            htmlPerfil += `<li><a href="dashboard.html" style="color: #d32f2f; font-weight: bold;">⚙️ Panel de Admin</a></li>`;
+            htmlPerfil += `<li><a href="dashboard.html" style="color: #d32f2f; font-weight: bold;">🛠️ Panel de Admin</a></li>`;
+        } else if (usuario.rol === 'escritor') {
+            htmlPerfil += `<li><a href="dashboard.html" style="color: #388E3C; font-weight: bold;">✍️ Escribir Artículo</a></li>`;
         }
 
         htmlPerfil += `
                 <li><a href="#" id="btn-logout" style="color: #555;">Cerrar Sesión</a></li>
             </ul>
         `;
-
+        
         // Inyectamos el nuevo HTML en la pantalla
         infoUsuarioDiv.innerHTML = htmlPerfil;
 
@@ -181,20 +271,46 @@ if (formPublicar) {
             const listaAdmin = document.getElementById('admin-lista-articulos');
             if(!listaAdmin) return;
 
+            // ¡EL PARCHE! Rescatamos los datos del usuario directamente aquí
+            const usuarioData = localStorage.getItem('usuarioLogeado');
+            if(!usuarioData) return;
+            const usuario = JSON.parse(usuarioData);
+
             try {
                 const respuesta = await fetch('http://localhost:3000/api/articulos');
                 const articulos = await respuesta.json();
                 
                 listaAdmin.innerHTML = ''; // Limpiamos la caja
                 
+                let articulosMostrados = 0; // Un contador para saber si pintamos algo en pantalla
+
                 articulos.forEach(art => {
+                    // VERIFICACIÓN DE PERMISOS: ¿Soy admin o soy el creador de este artículo?
+                    const soyAdmin = usuario.rol === 'admin';
+                    const esMio = art.autor === usuario.nombre;
+                    
+                    // Si NO soy admin y NO es mi artículo, lo ignoramos y pasamos al siguiente
+                    if (!soyAdmin && !esMio) return; 
+
+                    // Si pasamos el filtro, sumamos 1 al contador e imprimimos el artículo
+                    articulosMostrados++;
+
                     listaAdmin.innerHTML += `
                         <div style="border-bottom: 1px solid #ccc; padding: 10px 0; display: flex; justify-content: space-between; align-items: center;">
                             <span style="font-size: 18px;"><b>${art.titulo}</b> <br><span style="color: #555; font-size: 16px;">(Autor: ${art.autor})</span></span>
-                            <button onclick="eliminarArticulo(${art.id})" style="background: #d32f2f; color: white; border: 2px solid #b71c1c; cursor: pointer; font-family: 'VT323'; font-size: 18px; padding: 5px 10px;">🗑️ Eliminar</button>
+                            <div style="display: flex; gap: 5px;">
+                                <button onclick="prepararEdicion(${art.id})" style="background: #FF9800; color: white; border: 2px solid #E65100; cursor: pointer; font-family: 'VT323'; font-size: 18px; padding: 5px 10px;">✏️ Editar</button>
+                                <button onclick="eliminarArticulo(${art.id})" style="background: #d32f2f; color: white; border: 2px solid #b71c1c; cursor: pointer; font-family: 'VT323'; font-size: 18px; padding: 5px 10px;">🗑️ Eliminar</button>
+                            </div>
                         </div>
                     `;
                 });
+
+                // Si la lista terminó y el contador está en 0, mostramos un mensaje amigable
+                if (articulosMostrados === 0) {
+                    listaAdmin.innerHTML = '<p style="color: #555; font-style: italic; font-size: 20px;">No tienes artículos publicados aún. ¡Anímate a escribir tu primera guía!</p>';
+                }
+
             } catch(error) {
                 listaAdmin.innerHTML = '<p style="color: red;">Error al cargar artículos.</p>';
             }
@@ -231,16 +347,74 @@ if (formPublicar) {
     } else {
         const usuario = JSON.parse(usuarioGuardado);
         
-        // EL GUARDIA: Verificamos si es un administrador
-        if (usuario.rol !== 'admin') {
-            alert("Acceso denegado. Esta zona es solo para administradores.");
+        // 1. EL GUARDIA DE RANGOS
+        if (usuario.rol !== 'admin' && usuario.rol !== 'escritor') {
+            alert("Acceso denegado. Necesitas rango de Escritor o Administrador.");
             window.location.href = 'index.html';
-        } else {
-            // Si pasó la seguridad, mostramos su nombre en la derecha
-            document.getElementById('admin-nombre-display').innerText = "Operador: " + usuario.nombre;
+        } 
+
+        // 2. IDENTIFICACIÓN EN PANTALLA (¡Esto repara el "Identificando..."!)
+        const displayNombre = document.getElementById('admin-nombre-display');
+        if (displayNombre) {
+            displayNombre.innerHTML = `Operador: <b>${usuario.nombre}</b><br>Rol: <span style="color: ${usuario.rol === 'admin' ? '#d32f2f' : '#388E3C'}; font-weight: bold;">${usuario.rol.toUpperCase()}</span>`;
+        }
+        
+        // 3. ADAPTACIÓN VISUAL Y SEGURIDAD PARA ESCRITORES
+        if (usuario.rol === 'escritor') {
+            // Cambiamos los títulos para que el escritor se sienta en su propio espacio
+            const headerTitulo = document.querySelector('header h1');
+            if (headerTitulo) headerTitulo.innerText = "✍️ PANEL DE ESCRITOR ✍️";
+
+            const sidebarTitulo = document.querySelector('#columna-sidebar h3');
+            if (sidebarTitulo) sidebarTitulo.innerText = "👤 Modo Escritor";
+
+            // ¡SEGURIDAD! Ocultamos definitivamente la zona de Usuarios y Categorías
+            const zonaAdmin = document.getElementById('zona-admin-exclusiva');
+            if (zonaAdmin) zonaAdmin.style.display = 'none';
         }
 
         // --- Lógica para enviar el artículo a la base de datos ---
+        // Variable global para saber si estamos creando (null) o editando (un ID)
+        let articuloEnEdicionId = null;
+
+        // --- ¡NUEVA FUNCIÓN! Preparar el formulario para editar ---
+        window.prepararEdicion = async function(id) {
+            try {
+                const respuesta = await fetch(`http://localhost:3000/api/articulos/${id}`);
+                const art = await respuesta.json();
+
+                // 1. Rellenamos las cajas de texto con la info de la base de datos
+                document.getElementById('post-titulo').value = art.titulo;
+                document.getElementById('post-categoria').value = art.categoria_id;
+                
+                // Ponemos el texto en el Mini-Word
+                if (typeof CKEDITOR !== 'undefined') {
+                    CKEDITOR.instances['post-contenido'].setData(art.contenido);
+                } else {
+                    document.getElementById('post-contenido').value = art.contenido;
+                }
+
+                // 2. Cambiamos el estado del sistema a "Modo Edición"
+                articuloEnEdicionId = art.id;
+                
+                // 3. Cambiamos el aspecto del botón y del título
+                const botonForm = document.querySelector('#formulario-publicar button');
+                botonForm.innerText = "💾 Actualizar Artículo";
+                botonForm.style.background = "#FF9800";
+                botonForm.style.borderColor = "#E65100";
+                
+                // Subimos la pantalla hacia arriba suavemente para que el usuario vea el formulario
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                
+                document.getElementById('mensaje-publicacion').innerText = "Modo edición activado. Modifica y guarda.";
+                document.getElementById('mensaje-publicacion').style.color = "#FF9800";
+
+            } catch (error) {
+                alert("❌ Error al intentar cargar el artículo para editar.");
+            }
+        };
+
+        // --- Lógica mejorada para enviar el artículo (Sirve para Crear y Actualizar) ---
         formPublicar.addEventListener('submit', async (evento) => {
             evento.preventDefault();
 
@@ -259,17 +433,23 @@ if (formPublicar) {
             // Validación: Evitar publicar artículos vacíos
             if (contenidoHTML.trim() === "") {
                 mensajePub.style.color = "red";
-                mensajePub.innerText = "❌ El contenido del artículo no puede estar vacío.";
+                mensajePub.innerText = "❌ El contenido no puede estar vacío.";
                 return;
             }
 
+            // DECISIÓN INTELIGENTE: ¿Es un POST (Crear) o un PUT (Actualizar)?
+            const metodo = articuloEnEdicionId ? 'PUT' : 'POST';
+            const url = articuloEnEdicionId 
+                        ? `http://localhost:3000/api/articulos/${articuloEnEdicionId}`
+                        : 'http://localhost:3000/api/articulos';
+
             try {
-                const respuesta = await fetch('http://localhost:3000/api/articulos', {
-                    method: 'POST',
+                const respuesta = await fetch(url, {
+                    method: metodo,
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
                         titulo: titulo, 
-                        contenido: contenidoHTML, // Enviamos el HTML formateado
+                        contenido: contenidoHTML, 
                         categoria_id: parseInt(categoria_id), 
                         autor_id: usuario.id 
                     })
@@ -277,16 +457,24 @@ if (formPublicar) {
 
                 if (respuesta.ok) {
                     mensajePub.style.color = "green";
-                    mensajePub.innerText = "✅ ¡Artículo publicado con éxito en la Base de Datos!";
+                    mensajePub.innerText = articuloEnEdicionId ? "✅ ¡Artículo actualizado!" : "✅ ¡Artículo publicado!";
                     
-                    // Limpiamos el formulario y el Mini-Word
+                    // Limpiamos todo y volvemos a la normalidad
                     document.getElementById('post-titulo').value = "";
-                    if (typeof CKEDITOR !== 'undefined') {
-                        CKEDITOR.instances['post-contenido'].setData('');
-                    }
+                    if (typeof CKEDITOR !== 'undefined') CKEDITOR.instances['post-contenido'].setData('');
+                    
+                    articuloEnEdicionId = null; // Salimos del modo edición
+                    
+                    const botonForm = document.querySelector('#formulario-publicar button');
+                    botonForm.innerText = "Publicar Artículo al Servidor";
+                    botonForm.style.background = "#4CAF50";
+                    botonForm.style.borderColor = "#388E3C";
+
+                    // Recargamos la lista de abajo para ver los cambios
+                    cargarArticulosAdmin();
                 } else {
                     mensajePub.style.color = "red";
-                    mensajePub.innerText = "❌ Hubo un error al guardar el artículo.";
+                    mensajePub.innerText = "❌ Hubo un error al guardar.";
                 }
             } catch (error) {
                 mensajePub.style.color = "red";
@@ -296,14 +484,11 @@ if (formPublicar) {
     }
 }
 
-// --- LÓGICA DE LECTURA DE ARTÍCULO INDIVIDUAL ---
+// --- LÓGICA DE LECTURA DE ARTÍCULO INDIVIDUAL Y COMENTARIOS ---
 async function cargarArticuloCompleto() {
     const contenedorArticulo = document.getElementById('vista-articulo-completo');
-    
-    // Si no estamos en articulo.html, abortamos
     if (!contenedorArticulo) return;
 
-    // Extraemos el ?id=X de la barra de direcciones del navegador
     const urlParams = new URLSearchParams(window.location.search);
     const id = urlParams.get('id');
 
@@ -314,34 +499,147 @@ async function cargarArticuloCompleto() {
 
     try {
         const respuesta = await fetch(`http://localhost:3000/api/articulos/${id}`);
-        
         if (!respuesta.ok) throw new Error("No encontrado");
-        
         const art = await respuesta.json();
         
-        // Aquí SÍ inyectamos el art.contenido crudo, para que el navegador renderice las fotos y negritas
+        // Revisamos si hay alguien logeado para mostrarle la caja de escribir
+        const usuarioGuardado = localStorage.getItem('usuarioLogeado');
+        let formComentarioHTML = `<p style="color: #d32f2f; font-weight: bold;">Debes iniciar sesión para comentar.</p>`;
+        
+        if (usuarioGuardado) {
+            formComentarioHTML = `
+                <form id="formulario-comentario" style="margin-top: 15px;">
+                    <textarea id="texto-comentario" rows="3" placeholder="Escribe tu comentario aquí..." required style="width: 100%; padding: 8px; font-family: 'VT323', monospace; font-size: 18px; resize: vertical; box-sizing: border-box;"></textarea>
+                    <button type="submit" style="margin-top: 5px; background: #4CAF50; color: white; border: 2px solid #388E3C; cursor: pointer; font-family: 'VT323'; font-size: 18px; padding: 5px 15px;">Enviar Comentario</button>
+                </form>
+            `;
+        }
+
+        // Inyectamos el artículo Y la nueva estructura de comentarios debajo
         contenedorArticulo.innerHTML = `
             <div class="articulo">
                 <h1 style="font-size: 32px; border-bottom: 2px dashed #ccc; padding-bottom: 10px;">${art.titulo}</h1>
                 <span class="categoria">${art.categoria}</span>
-                <p class="autor-fecha" style="margin-top: 10px;">Escrito por <b>${art.autor}</b> el ${new Date(art.fecha_publicacion).toLocaleDateString()}</p>
-                
+                <p class="autor-fecha" style="margin-top: 10px;">Escrito por <b><a href="perfil-publico.html?usuario=${art.autor}" style="color: #0000EE; text-decoration: underline;">${art.autor}</a></b> el ${new Date(art.fecha_publicacion).toLocaleDateString()}</p>
                 <div class="contenido-formateado" style="margin-top: 25px; font-size: 22px;">
                     ${art.contenido}
                 </div>
             </div>
+
+            <div class="articulo" style="background: #e0e0e0; margin-top: 20px;">
+                <h3 style="border-bottom: 2px dashed #888; padding-bottom: 5px; margin-top: 0;">💬 Comentarios</h3>
+                ${formComentarioHTML}
+                <div id="lista-comentarios" style="margin-top: 20px;">
+                    <p>Cargando comentarios...</p>
+                </div>
+            </div>
         `;
+
+        // Activamos la carga de comentarios y el formulario
+        cargarComentarios(id);
+        activarFormularioComentario(id);
+
     } catch (error) {
-        contenedorArticulo.innerHTML = `<div class="articulo"><h2 style="color: red;">Error 404: El artículo que buscas no existe o fue eliminado.</h2></div>`;
+        contenedorArticulo.innerHTML = `<div class="articulo"><h2 style="color: red;">Error 404: El artículo no existe.</h2></div>`;
     }
 }
 
+// Cargar la lista de comentarios
+async function cargarComentarios(articuloId) {
+    const lista = document.getElementById('lista-comentarios');
+    if (!lista) return;
+
+    const usuarioGuardado = localStorage.getItem('usuarioLogeado');
+    const usuario = usuarioGuardado ? JSON.parse(usuarioGuardado) : null;
+    const esAdmin = usuario && usuario.rol === 'admin';
+
+    try {
+        const respuesta = await fetch(`http://localhost:3000/api/articulos/${articuloId}/comentarios`);
+        const comentarios = await respuesta.json();
+
+        lista.innerHTML = '';
+
+        if (comentarios.length === 0) {
+            lista.innerHTML = '<p style="color: #666; font-style: italic;">Sé el primero en comentar.</p>';
+            return;
+        }
+
+        comentarios.forEach(com => {
+            // ¡NUEVA LÓGICA DE PERMISOS!
+            // Verificamos si el usuario actual es el dueño exacto de este comentario
+            const esMiComentario = usuario && usuario.nombre === com.autor;
+            
+            let botonBorrar = '';
+            // El botón aparece SI eres admin O SI es tu propio comentario
+            if (esAdmin || esMiComentario) {
+                botonBorrar = `<button onclick="borrarComentario(${com.id}, ${articuloId})" style="float: right; background: #d32f2f; color: white; border: 1px solid #b71c1c; cursor: pointer; font-size: 14px; padding: 2px 5px;">🗑️ Borrar</button>`;
+            }
+
+            lista.innerHTML += `
+                <div style="background: #fff; border: 1px solid #aaa; padding: 10px; margin-bottom: 10px;">
+                    ${botonBorrar}
+                    <p style="margin: 0; font-weight: bold;"><a href="perfil-publico.html?usuario=${com.autor}" style="color: #1B5E20; text-decoration: underline;">${com.autor}</a> <span style="color: #888; font-weight: normal; font-size: 16px;">- ${new Date(com.fecha_publicacion).toLocaleString()}</span></p>
+                    <p style="margin: 5px 0 0 0; font-size: 20px;">${com.contenido}</p>
+                </div>
+            `;
+        });
+    } catch (error) {
+        lista.innerHTML = '<p style="color: red;">Error al cargar comentarios.</p>';
+    }
+}
+
+// Activar el botón de enviar
+function activarFormularioComentario(articuloId) {
+    const form = document.getElementById('formulario-comentario');
+    if (!form) return;
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const contenido = document.getElementById('texto-comentario').value;
+        const usuario = JSON.parse(localStorage.getItem('usuarioLogeado'));
+
+        try {
+            const respuesta = await fetch('http://localhost:3000/api/comentarios', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ articulo_id: parseInt(articuloId), autor_id: usuario.id, contenido: contenido })
+            });
+
+            if (respuesta.ok) {
+                document.getElementById('texto-comentario').value = ''; // Limpiamos la caja
+                cargarComentarios(articuloId); // Recargamos la lista
+            } else {
+                alert("Error al publicar el comentario.");
+            }
+        } catch (error) {
+            alert("Error de conexión.");
+        }
+    });
+}
+
+// Función global para que el Admin borre comentarios
+window.borrarComentario = async function(id, articuloId) {
+    if (confirm("¿Seguro que deseas eliminar este comentario?")) {
+        try {
+            const respuesta = await fetch(`http://localhost:3000/api/comentarios/${id}`, { method: 'DELETE' });
+            if (respuesta.ok) {
+                cargarComentarios(articuloId); // Recargamos para que desaparezca
+            } else {
+                alert("Error al borrar.");
+            }
+        } catch (error) {
+            alert("Error de conexión.");
+        }
+    }
+}
+
+// Ejecutamos la carga inicial (si estamos en articulo.html)
 cargarArticuloCompleto();
 
-// Lógica de Gestión: Cargar y Banear Usuarios ---
-        async function cargarUsuariosAdmin() {
-            const listaUsuarios = document.getElementById('admin-lista-usuarios');
-            if(!listaUsuarios) return;
+// --- Lógica de Gestión: Cargar Usuarios con Checkboxes ---
+async function cargarUsuariosAdmin() {
+    const listaUsuarios = document.getElementById('admin-lista-usuarios');
+        if(!listaUsuarios) return;
 
             try {
                 const respuesta = await fetch('http://localhost:3000/api/usuarios');
@@ -359,13 +657,48 @@ cargarArticuloCompleto();
 
                     listaUsuarios.innerHTML += `
                         <div style="border-bottom: 1px solid #ccc; padding: 10px 0; display: flex; justify-content: space-between; align-items: center;">
-                            <span style="font-size: 18px; color: ${colorNombre}"><b>${user.nombre_usuario}</b> (${user.correo}) - Rol: ${user.rol || 'usuario'}</span>
+                            <div>
+                                <input type="checkbox" class="chk-usuario" value="${user.id}" style="transform: scale(1.5); margin-right: 10px;">
+                                <span style="font-size: 18px; color: ${colorNombre}"><b>${user.nombre_usuario}</b> (${user.correo}) - Rol: <b>${user.rol || 'usuario'}</b></span>
+                            </div>
                             <button onclick="cambiarEstadoUsuario(${user.id}, '${nuevoEstado}')" style="background: ${colorBoton}; color: white; border: 2px solid #000; cursor: pointer; font-family: 'VT323'; font-size: 18px; padding: 5px 10px;">${textoBoton}</button>
                         </div>
                     `;
                 });
             } catch(error) {
                 listaUsuarios.innerHTML = '<p style="color: red;">Error al cargar usuarios.</p>';
+            }
+        }
+
+        // ¡LA NUEVA FUNCIÓN MULTI-SELECCIÓN!
+        window.aplicarRolMasivo = async function() {
+            // Buscamos todas las casillas que el administrador haya marcado
+            const checkboxes = document.querySelectorAll('.chk-usuario:checked');
+            const idsSeleccionados = Array.from(checkboxes).map(chk => chk.value);
+            const nuevoRol = document.getElementById('select-rol-masivo').value;
+
+            if (idsSeleccionados.length === 0) {
+                alert("⚠️ Por favor, selecciona al menos un usuario de la lista.");
+                return;
+            }
+
+            if (confirm(`¿Ascender a los ${idsSeleccionados.length} usuarios seleccionados al rol de ${nuevoRol.toUpperCase()}?`)) {
+                try {
+                    const respuesta = await fetch('http://localhost:3000/api/usuarios/roles', {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ ids: idsSeleccionados, nuevoRol: nuevoRol })
+                    });
+
+                    if (respuesta.ok) {
+                        alert("✅ Roles actualizados con éxito.");
+                        cargarUsuariosAdmin(); // Recargamos para ver los cambios
+                    } else {
+                        alert("❌ Hubo un error al aplicar los roles.");
+                    }
+                } catch (error) {
+                    alert("❌ Error de conexión con el servidor.");
+                }
             }
         }
 
@@ -483,3 +816,223 @@ cargarArticuloCompleto();
                 }
             });
         }
+
+// --- LÓGICA DEL BUSCADOR EN EL MENÚ PRINCIPAL ---
+const btnBuscar = document.getElementById('btn-buscar');
+const inputBusqueda = document.getElementById('input-busqueda');
+
+if (btnBuscar && inputBusqueda) {
+    // Buscar al hacer clic en el botón con el mouse
+    btnBuscar.addEventListener('click', () => {
+        const termino = inputBusqueda.value.trim();
+        cargarArticulos(termino);
+    });
+
+    // Buscar automáticamente si el usuario presiona la tecla "Enter"
+    inputBusqueda.addEventListener('keypress', (evento) => {
+        if (evento.key === 'Enter') {
+            evento.preventDefault(); // Evitamos que la página salte
+            const termino = inputBusqueda.value.trim();
+            cargarArticulos(termino);
+        }
+    });
+}
+
+// --- LÓGICA DE LA PÁGINA DE PERFIL (VERSIÓN SUBIDA DE ARCHIVO REAL) ---
+const formPerfil = document.getElementById('formulario-perfil');
+
+if (formPerfil) {
+    const usuarioGuardado = localStorage.getItem('usuarioLogeado');
+    
+    if (!usuarioGuardado) {
+        alert("Debes iniciar sesión para ver tu perfil.");
+        window.location.href = 'login.html';
+    } else {
+        const usuario = JSON.parse(usuarioGuardado);
+
+        // A. Carga inicial de datos
+        document.getElementById('perfil-nombre').value = usuario.nombre;
+        // ¡NUEVO! Cargamos la descripción
+        document.getElementById('perfil-descripcion').value = usuario.descripcion || '';
+        // Ahora cargamos la foto directamente de la base de datos (con la URL que nos de el backend)
+        const fotoActual = usuario.foto_perfil || 'img/steve.png';
+        
+        // ¡OJO! Si la foto empieza con '/uploads/', debemos sumarle el servidor (localhost:3000)
+        const urlFotoCompleta = fotoActual.startsWith('/uploads/') ? `http://localhost:3000${fotoActual}` : fotoActual;
+        document.getElementById('preview-avatar').src = urlFotoCompleta;
+
+        // B. Lógica del Botón y el Input de Archivo invisible
+        const btnCambiarFoto = document.getElementById('btn-cambiar-foto');
+        const inputArchivo = document.getElementById('input-foto-archivo');
+
+        if (btnCambiarFoto && inputArchivo) {
+            // 1. Al hacer clic en el botón naranja, "apretamos" el input invisible
+            btnCambiarFoto.addEventListener('click', () => {
+                inputArchivo.click(); 
+            });
+
+            // 2. Cuando el usuario selecciona un archivo en su PC
+            inputArchivo.addEventListener('change', (evento) => {
+                const archivo = evento.target.files[0];
+                if (archivo) {
+                    // Previsualizamos la imagen localmente antes de subirla
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        document.getElementById('preview-avatar').src = e.target.result;
+                    };
+                    reader.readAsDataURL(archivo);
+                }
+            });
+        }
+
+        // C. Al darle a "Guardar Cambios"
+        formPerfil.addEventListener('submit', async (evento) => {
+            evento.preventDefault();
+            const nuevoNombre = document.getElementById('perfil-nombre').value;
+            const nuevaContrasena = document.getElementById('perfil-contrasena').value;
+            // ¡NUEVO! Capturamos lo que escribió en la caja
+            const nuevaDescripcion = document.getElementById('perfil-descripcion').value; 
+            const mensaje = document.getElementById('mensaje-perfil');
+
+            // ¡LA MAGIA! Creamos un objeto FormData en lugar de un JSON normal
+            const datosEnviar = new FormData();
+            datosEnviar.append('nombre_usuario', nuevoNombre);
+            datosEnviar.append('nueva_contrasena', nuevaContrasena);
+            datosEnviar.append('descripcion', nuevaDescripcion); // <-- ¡Añadimos esto al paquete!
+            
+            // Añadimos el archivo real si el usuario seleccionó uno
+            if (inputArchivo.files[0]) {
+                datosEnviar.append('foto', inputArchivo.files[0]);
+            }
+
+            try {
+                mensaje.innerText = "Subiendo y guardando...";
+                mensaje.style.color = "blue";
+
+                // Enviamos el FormData. ¡NOTA IMPORTANTE! Fetch pone el Header 'multipart/form-data' automáticamente, no lo escribas tú.
+                const respuesta = await fetch(`http://localhost:3000/api/usuarios/${usuario.id}/perfil`, {
+                    method: 'PUT',
+                    body: datosEnviar // Enviamos el FormData directamente
+                });
+
+                if (respuesta.ok) {
+                    const data = await respuesta.json(); // Obtenemos la respuesta JSON del servidor
+                    
+                    mensaje.style.color = "green";
+                    mensaje.innerText = "✅ Perfil actualizado con éxito.";
+
+                    // Actualizamos la memoria del navegador con los nuevos datos
+                    usuario.nombre = nuevoNombre;
+                    usuario.descripcion = nuevaDescripcion; // <-- ¡Añadimos esto!
+                    
+                    // Si el servidor nos devolvió una nueva URL de foto, la guardamos
+                    if (data.nuevaFoto) {
+                        usuario.foto_perfil = data.nuevaFoto;
+                    }
+                    localStorage.setItem('usuarioLogeado', JSON.stringify(usuario));
+
+                    document.getElementById('perfil-contrasena').value = '';
+                    
+                    // Recargamos el menú lateral para que la foto pequeña se actualice
+                    verificarSesion();
+                } else {
+                    const errorText = await respuesta.text();
+                    mensaje.style.color = "red";
+                    mensaje.innerText = "❌ " + errorText;
+                }
+            } catch (error) {
+                mensaje.style.color = "red";
+                mensaje.innerText = "❌ Error de conexión con el servidor.";
+            }
+        });
+    }
+}
+
+// --- LÓGICA DE LA PÁGINA DE PERFIL PÚBLICO (perfil-publico.html) ---
+async function cargarPerfilPublico() {
+    const tarjetaPerfil = document.getElementById('tarjeta-perfil');
+    if (!tarjetaPerfil) return;
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const nombreUsuarioURL = urlParams.get('usuario');
+
+    if (!nombreUsuarioURL) {
+        document.getElementById('mensaje-error-perfil').style.display = 'block';
+        return;
+    }
+
+    try {
+        // 1. CARGAMOS DATOS DEL PERFIL (Igual que antes)
+        const respuesta = await fetch(`http://localhost:3000/api/usuarios/publico/${nombreUsuarioURL}`);
+        if (!respuesta.ok) throw new Error("No encontrado");
+        const perfil = await respuesta.json();
+        
+        const urlFotoCompleta = (perfil.foto_perfil && perfil.foto_perfil.startsWith('/uploads/')) 
+                                ? `http://localhost:3000${perfil.foto_perfil}` 
+                                : (perfil.foto_perfil || 'img/steve.png');
+
+        document.getElementById('pub-foto').src = urlFotoCompleta;
+        document.getElementById('pub-nombre').innerText = perfil.nombre_usuario;
+        document.getElementById('pub-descripcion').innerText = perfil.descripcion || "Este usuario aún no ha escrito su biografía.";
+        
+        const spanRol = document.getElementById('pub-rol');
+        spanRol.innerText = perfil.rol.toUpperCase();
+        spanRol.style.background = perfil.rol === 'admin' ? '#d32f2f' : '#388E3C';
+
+        // 2. ¡NUEVO! CARGAMOS ARTÍCULOS ESCRITOS POR EL USUARIO
+        const listaArticulos = document.getElementById('lista-articulos-perfil');
+        try {
+            const resArticulos = await fetch(`http://localhost:3000/api/articulos/usuario/${nombreUsuarioURL}`);
+            const articulos = await resArticulos.json();
+
+            listaArticulos.innerHTML = ''; // Limpiamos "Cargando..."
+
+            if (articulos.length === 0) {
+                listaArticulos.innerHTML = '<p style="color: #555; font-style: italic;">Este usuario aún no ha publicado ninguna guía.</p>';
+            } else {
+                articulos.forEach(art => {
+                    listaArticulos.innerHTML += `
+                        <div style="border-bottom: 1px dashed #ccc; padding: 5px 0;">
+                            <a href="articulo.html?id=${art.id}" style="color: #0000EE; font-size: 20px; font-weight: bold; text-decoration: underline;">
+                                ${art.titulo}
+                            </a>
+                            <br><small style="color: #666;">Publicado el: ${new Date(art.fecha_publicacion).toLocaleDateString()}</small>
+                        </div>
+                    `;
+                });
+            }
+        } catch(e) { listaArticulos.innerHTML = '<p style="color: red;">Error al cargar artículos.</p>'; }
+
+        // Muestramos la tarjeta
+        tarjetaPerfil.style.display = 'block';
+
+        // 3. Lógica de Moderación (Solo para Administradores - Igual que antes)
+        const usuarioGuardado = localStorage.getItem('usuarioLogeado');
+        if (usuarioGuardado) {
+            const miUsuario = JSON.parse(usuarioGuardado);
+            if (miUsuario.rol === 'admin' && miUsuario.nombre !== perfil.nombre_usuario) {
+                const zonaModeracion = document.getElementById('zona-moderacion');
+                const btnBan = document.getElementById('btn-ban-publico');
+                zonaModeracion.style.display = 'block';
+                const esBaneado = perfil.estado === 'baneado';
+                btnBan.innerText = esBaneado ? '✅ Reactivar Cuenta' : '🔨 Banear del Blog';
+                btnBan.style.background = esBaneado ? '#4CAF50' : '#222';
+                btnBan.addEventListener('click', async () => {
+                    const nuevoEstado = esBaneado ? 'activo' : 'baneado';
+                    if(confirm(`¿Seguro que quieres bamear/reactivar a ${perfil.nombre_usuario}?`)) {
+                        try {
+                            const resBan = await fetch(`http://localhost:3000/api/usuarios/${perfil.id}/estado`, {
+                                method: 'PUT',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ estado: nuevoEstado })
+                            });
+                            if(resBan.ok) location.reload();
+                        } catch(e) { alert("Error de conexión."); }
+                    }
+                });
+            }
+        }
+    } catch (error) { document.getElementById('mensaje-error-perfil').style.display = 'block'; }
+}
+
+cargarPerfilPublico();

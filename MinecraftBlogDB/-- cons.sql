@@ -14,6 +14,15 @@ CREATE TABLE Usuarios (
     fecha_registro DATETIME DEFAULT GETDATE()
 );
 
+-- 2.1 columna para guardar foto de perfil del usuario
+UPDATE Usuarios SET foto_perfil = 'steve.png' WHERE foto_perfil LIKE '%imgur%';
+GO
+
+--2.2 Columna nueva para añadir una descripcion personalizada para el usuario (con un texto de prueba)
+ALTER TABLE Usuarios 
+ADD descripcion VARCHAR(1000) DEFAULT '¡Hola! Soy un nuevo superviviente en el blog.';
+GO
+
 -- 3. Tabla Categorías
 CREATE TABLE Categorias (
     id INT IDENTITY(1,1) PRIMARY KEY,
@@ -33,7 +42,7 @@ CREATE TABLE Articulos (
     CONSTRAINT FK_Articulo_Usuario FOREIGN KEY (autor_id) REFERENCES Usuarios(id)
 );
 
--- 5. Tabla Comentarios
+-- 5. Tabla Comentarios (actualmente dado de baja)
 CREATE TABLE Comentarios (
     id INT IDENTITY(1,1) PRIMARY KEY,
     articulo_id INT NOT NULL,
@@ -59,6 +68,16 @@ VALUES (
     'Lo primero que debes hacer es talar madera, hacer una mesa de crafteo y construir un refugio de tierra antes de que caiga el sol y aparezcan los creepers...', 
     1, 
     1
+);
+GO
+
+-- 5. Tabla Comentarios (actualmente funcionando)
+CREATE TABLE Comentarios (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    articulo_id INT FOREIGN KEY REFERENCES Articulos(id) ON DELETE CASCADE,
+    autor_id INT FOREIGN KEY REFERENCES Usuarios(id),
+    contenido VARCHAR(500) NOT NULL,
+    fecha_publicacion DATETIME DEFAULT GETDATE()
 );
 GO
 

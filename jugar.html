@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jugar Minecraft Web - Minecraft Blog</title>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Estilos generales de la página ancha */
+        .pagina-lectura #contenedor-principal { max-width: 1200px; }
+
+        /* NUEVO CONTENEDOR MAESTRO (Target para Fullscreen) */
+        #wrapper-juego {
+            width: 100%;
+            height: 720px;
+            background-color: #000;
+            position: relative;
+            overflow: hidden;
+            border: none;
+            outline: none;
+            margin-bottom: 20px;
+            image-rendering: pixelated; /* Toque retro para el escalado */
+        }
+
+        /* Iframe limpio dentro del wrapper */
+        #frame-juego {
+            width: 100%;
+            height: 100%;
+            border: none;
+            outline: none;
+            image-rendering: pixelated;
+        }
+
+        /* ESTILOS AUTOMÁTICOS AL ENTRAR EN PANTALLA COMPLETA NATIVA */
+        #wrapper-juego:fullscreen,
+        #wrapper-juego:-webkit-full-screen,
+        #wrapper-juego:-moz-full-screen {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+
+</head>
+<body class="pagina-lectura"> <div id="contenedor-principal">
+        <header>
+            <h1>⚔️ MINECRAFT WEB EDITION ⚔️</h1>
+            <p>Juega directamente en tu navegador. Cortesía de Eaglercraft.</p>
+        </header>
+
+        <nav id="menu-principal">
+            <a href="index.html">Inicio</a>
+            <a href="jugar.html" style="background-color: #1B5E20; color: #FFEB3B;">🎮 Jugar Web</a>
+            <a href="construccion.html">Foro</a>
+            <a href="construccion.html">Descargar Mods</a>
+            <a href="construccion.html">Servidores</a>
+        </nav>
+
+        <div style="text-align: center; margin-bottom: 20px;">
+            <p style="color: #333; font-size: 22px; margin-bottom: 5px;">
+                Juega Minecraft 1.8.8 directamente en tu navegador gracias a EaglercraftX.
+            </p>
+            <p style="color: #d32f2f; font-weight: bold; font-size: 26px; margin-top: 0;">
+                ⚠️ Haz clic en el recuadro para controles. Presiona ESC para liberarlos.
+            </p>
+            
+            <button id="btn-pantalla-completa" style="background: #FF9800; color: white; border: 3px solid #E65100; cursor: pointer; font-family: 'VT323'; font-size: 24px; padding: 10px 30px; margin-top: 10px;">
+                📺 Entrar en Pantalla Completa Nativa
+            </button>
+        </div>
+
+        <div id="wrapper-juego">
+            <iframe id="frame-juego" src="http://localhost:3000/uploads/eaglercraft.html" tabindex="0" sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock allow-downloads" allow="autoplay; fullscreen; pointer-lock; keyboard-map;" allowfullscreen></iframe>
+        </div>
+
+    </div>
+    
+    <footer id="pie-pagina">
+        <p>⛏️ MINECRAFT BLOG © 2026 - Desarrollado por Angel ⛏️</p>
+    </footer>
+
+    <script src="script.js"></script>
+
+    <script>
+        const frameJuego = document.getElementById('frame-juego');
+        const wrapperJuego = document.getElementById('wrapper-juego'); // El target para fullscreen
+        const btnFs = document.getElementById('btn-pantalla-completa');
+
+        // --- LÓGICA 1: SEGURIDAD DEL TECLADO/FOCO UX ---
+        if (frameJuego && wrapperJuego) {
+            // Forzar foco al hacer clic en el contenedor (ayuda a capturar teclado)
+            wrapperJuego.addEventListener('click', () => {
+                frameJuego.focus();
+            });
+            // Ayuda extra para Chrome: Foco si el mouse está encima
+            wrapperJuego.addEventListener('mouseenter', () => {
+                frameJuego.focus();
+            });
+        }
+
+        // --- LÓGICA 2: PANTALLA COMPLETA NATIVA (RequestFullscreen) ---
+        if (btnFs && wrapperJuego) {
+            btnFs.addEventListener('click', () => {
+                entrarOPromocionarFullscreen();
+            });
+        }
+
+        function entrarOPromocionarFullscreen() {
+            // 1. Verificamos si ya estamos en FS (Standard y Browsers viejos)
+            if (!document.fullscreenElement && !document.mozFullScreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {
+                
+                // REQUEST FULLSCREEN (entrar) al contenedor wrapper
+                if (wrapperJuego.requestFullscreen) {
+                    wrapperJuego.requestFullscreen();
+                } else if (wrapperJuego.msRequestFullscreen) {
+                    wrapperJuego.msRequestFullscreen();
+                } else if (wrapperJuego.mozRequestFullScreen) {
+                    wrapperJuego.mozRequestFullScreen();
+                } else if (wrapperJuego.webkitRequestFullscreen) {
+                    // Chrome/Safari: Permitimos explícitamente el teclado
+                    wrapperJuego.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+                }
+            } else {
+                // EXIT FULLSCREEN (salir si ya estamos dentro)
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.msExitFullscreen) {
+                    document.msExitFullscreen();
+                } else if (document.mozCancelFullScreen) {
+                    document.mozCancelFullScreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                }
+            }
+        }
+
+        // LÓGICA 3: UX (Actualizar el botón al cambiar estado FS)
+        // Escuchamos todos los eventos posibles de cambio de FS
+        ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange'].forEach(evt => 
+            document.addEventListener(evt, actualizarBotonFs)
+        );
+
+        function actualizarBotonFs() {
+            // Verificamos si estamos dentro de FS
+            const esFs = document.fullscreenElement || document.mozFullScreenElement || document.webkitFullscreenElement || document.msFullscreenElement;
+            
+            if (esFs) {
+                // UX dentro de Pantalla Completa
+                btnFs.innerText = "📺 Salir Pantalla Completa";
+                btnFs.style.background = "#d32f2f"; // Rojo
+                btnFs.style.borderColor = "#b71c1c";
+            } else {
+                // UX normal
+                btnFs.innerText = "📺 Entrar en Pantalla Completa Nativa";
+                btnFs.style.background = "#FF9800"; // Naranja normal
+                btnFs.style.borderColor = "#E65100";
+                
+                // UX extra: Volver el foco al Iframe al salir (ayuda a reconectar controles)
+                frameJuego.focus();
+            }
+        }
+    </script>
+
+</body>
+</html>
