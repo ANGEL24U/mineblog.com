@@ -1,37 +1,36 @@
-// script.js
 // script.js - VERSIÓN ULTRA-PAGINADA (10 POR PÁGINA)
 
 async function cargarArticulos(terminoBusqueda = "") {
     try {
         const contenedor = document.getElementById('columna-articulos');
         const controlesPaginacion = document.getElementById('paginacion-controles');
-        
+
         // LOS ESCUDOS
         if (document.getElementById('formulario-publicar')) return;
-        if (document.getElementById('formulario-perfil')) return; 
-        if (document.getElementById('tarjeta-perfil')) return; 
-        if (!contenedor) return; 
+        if (document.getElementById('formulario-perfil')) return;
+        if (document.getElementById('tarjeta-perfil')) return;
+        if (!contenedor) return;
 
-        contenedor.innerHTML = '<p>Cargando artículos...</p>'; 
+        contenedor.innerHTML = '<p>Cargando artículos...</p>';
 
         // 1. OBTENEMOS LA PÁGINA ACTUAL DE LA URL
         const urlParams = new URLSearchParams(window.location.search);
-        let paginaActual = parseInt(urlParams.get('pagina')) || 1; 
+        let paginaActual = parseInt(urlParams.get('pagina')) || 1;
 
         // 2. CONSTRUIMOS LA URL DEL SERVIDOR 
         let fetchUrl = `http://localhost:3000/api/articulos?pagina=${paginaActual}&buscar=${terminoBusqueda}`;
 
-        const respuesta = await fetch(fetchUrl); 
-        
+        const respuesta = await fetch(fetchUrl);
+
         // Seguro contra caídas del servidor
         if (!respuesta.ok) throw new Error("Error del servidor");
 
-        const datos = await respuesta.json(); 
-        
+        const datos = await respuesta.json();
+
         const listaArticulos = datos.articulos;
         const infoPaginacion = datos.paginacion;
 
-        contenedor.innerHTML = ''; 
+        contenedor.innerHTML = '';
 
         // 3. SI NO HAY RESULTADOS
         if (listaArticulos.length === 0) {
@@ -44,7 +43,7 @@ async function cargarArticulos(terminoBusqueda = "") {
                     <p style="font-size: 22px;">${mensajeError}</p>
                     <button onclick="window.location.href='index.html'" style="margin-top: 15px; background: #388E3C; color: white; border: 2px solid #1B5E20; font-family: 'VT323'; font-size: 20px; cursor: pointer; padding: 5px 15px;">Ver todo</button>
                 </div>`;
-            if(controlesPaginacion) controlesPaginacion.style.display = 'none';
+            if (controlesPaginacion) controlesPaginacion.style.display = 'none';
             return;
         }
 
@@ -68,28 +67,28 @@ async function cargarArticulos(terminoBusqueda = "") {
         });
 
         // 5. PINTAMOS LOS BOTONES DE PAGINACIÓN
-        if(controlesPaginacion) {
+        if (controlesPaginacion) {
             renderizarControlesPaginacion(infoPaginacion, terminoBusqueda);
         }
 
     } catch (error) {
         const contenedor = document.getElementById('columna-articulos');
-        if(contenedor) contenedor.innerHTML = "<p style='color:red;'>Error: Se perdió la conexión con el servidor.</p>";
+        if (contenedor) contenedor.innerHTML = "<p style='color:red;'>Error: Se perdió la conexión con el servidor.</p>";
     }
 }
 
 // FUNCIONES DE PAGINACIÓN
 function renderizarControlesPaginacion(info, terminoBusqueda) {
     const controles = document.getElementById('paginacion-controles');
-    if(!controles) return;
-    controles.innerHTML = ''; 
+    if (!controles) return;
+    controles.innerHTML = '';
 
     if (info.totalPaginas <= 1) {
         controles.style.display = 'none';
         return;
     }
 
-    controles.style.display = 'block'; 
+    controles.style.display = 'block';
     let htmlBotones = '';
 
     const btnAnteriorDisabled = info.paginaActual === 1 ? 'disabled style="background: #9e9e9e; border-color: #757575; cursor: not-allowed; color: #555;"' : '';
@@ -103,7 +102,7 @@ function renderizarControlesPaginacion(info, terminoBusqueda) {
     controles.innerHTML = htmlBotones;
 }
 
-window.cambiarPagina = function(nuevaPagina, terminoBusqueda) {
+window.cambiarPagina = function (nuevaPagina, terminoBusqueda) {
     window.history.pushState({}, '', `index.html?pagina=${nuevaPagina}&buscar=${terminoBusqueda}`);
     cargarArticulos(terminoBusqueda);
     window.scrollTo(0, 0);
@@ -118,12 +117,12 @@ const formLogin = document.getElementById('formulario-login');
 
 if (formLogin) {
     formLogin.addEventListener('submit', async (evento) => {
-        evento.preventDefault(); 
+        evento.preventDefault();
 
         const correo = document.getElementById('correo').value;
         const contrasena = document.getElementById('contrasena').value;
         const mensajeError = document.getElementById('mensaje-error');
-        
+
         // Limpiamos errores previos
         mensajeError.innerText = "";
 
@@ -136,12 +135,12 @@ if (formLogin) {
 
             if (respuesta.ok) {
                 const datos = await respuesta.json();
-                
+
                 // ¡NUEVO! Guardamos al usuario en la memoria del navegador
                 localStorage.setItem('usuarioLogeado', JSON.stringify(datos.usuario));
-                
+
                 alert(datos.mensaje + " Bienvenido, " + datos.usuario.nombre);
-                window.location.href = 'index.html'; 
+                window.location.href = 'index.html';
             } else {
                 // Ahora leerá nuestros mensajes bonitos ("La contraseña no coincide", etc.)
                 const error = await respuesta.text();
@@ -158,13 +157,13 @@ const formRegistro = document.getElementById('formulario-registro');
 
 if (formRegistro) {
     formRegistro.addEventListener('submit', async (evento) => {
-        evento.preventDefault(); 
+        evento.preventDefault();
 
         const nombre_usuario = document.getElementById('reg-usuario').value;
         const correo = document.getElementById('reg-correo').value;
         const contrasena = document.getElementById('reg-contrasena').value;
         const mensajeErrorReg = document.getElementById('mensaje-error-reg');
-        
+
         mensajeErrorReg.innerText = "";
 
         try {
@@ -178,7 +177,7 @@ if (formRegistro) {
             if (respuesta.ok) {
                 alert("¡Cuenta creada con éxito! Ahora puedes iniciar sesión.");
                 // Si se registra bien, lo mandamos al login para que entre
-                window.location.href = 'login.html'; 
+                window.location.href = 'login.html';
             } else {
                 // Si el correo ya existe, mostramos el error de SQL
                 const error = await respuesta.text();
@@ -194,9 +193,9 @@ if (formRegistro) {
 function verificarSesion() {
     // Buscamos la caja del perfil en el HTML
     const infoUsuarioDiv = document.getElementById('info-usuario');
-    
+
     // Si no estamos en el index.html, la función se detiene aquí
-    if (!infoUsuarioDiv) return; 
+    if (!infoUsuarioDiv) return;
 
     // Leemos la memoria del navegador
     const usuarioGuardado = localStorage.getItem('usuarioLogeado');
@@ -204,10 +203,10 @@ function verificarSesion() {
     if (usuarioGuardado) {
         // Leemos la memoria del navegador
         const usuario = JSON.parse(usuarioGuardado);
-        
+
         // ¡NUEVO! Detectamos si estamos en la página de perfil
         const esPaginaPerfil = window.location.pathname.includes('perfil.html');
-        
+
         // Extraemos la foto (ahora apuntando a tu carpeta img/)
         const fotoUsuario = usuario.foto_perfil || 'img/steve.png';
 
@@ -244,7 +243,7 @@ function verificarSesion() {
                 <li><a href="#" id="btn-logout" style="color: #555;">Cerrar Sesión</a></li>
             </ul>
         `;
-        
+
         // Inyectamos el nuevo HTML en la pantalla
         infoUsuarioDiv.innerHTML = htmlPerfil;
 
@@ -267,35 +266,35 @@ if (formPublicar) {
     const usuarioGuardado = localStorage.getItem('usuarioLogeado');
 
     // --- Lógica de Gestión: Cargar y Eliminar Artículos ---
-        async function cargarArticulosAdmin() {
-            const listaAdmin = document.getElementById('admin-lista-articulos');
-            if(!listaAdmin) return;
+    async function cargarArticulosAdmin() {
+        const listaAdmin = document.getElementById('admin-lista-articulos');
+        if (!listaAdmin) return;
 
-            // ¡EL PARCHE! Rescatamos los datos del usuario directamente aquí
-            const usuarioData = localStorage.getItem('usuarioLogeado');
-            if(!usuarioData) return;
-            const usuario = JSON.parse(usuarioData);
+        // ¡EL PARCHE! Rescatamos los datos del usuario directamente aquí
+        const usuarioData = localStorage.getItem('usuarioLogeado');
+        if (!usuarioData) return;
+        const usuario = JSON.parse(usuarioData);
 
-            try {
-                const respuesta = await fetch('http://localhost:3000/api/articulos');
-                const articulos = await respuesta.json();
-                
-                listaAdmin.innerHTML = ''; // Limpiamos la caja
-                
-                let articulosMostrados = 0; // Un contador para saber si pintamos algo en pantalla
+        try {
+            const respuesta = await fetch('http://localhost:3000/api/articulos');
+            const articulos = await respuesta.json();
 
-                articulos.forEach(art => {
-                    // VERIFICACIÓN DE PERMISOS: ¿Soy admin o soy el creador de este artículo?
-                    const soyAdmin = usuario.rol === 'admin';
-                    const esMio = art.autor === usuario.nombre;
-                    
-                    // Si NO soy admin y NO es mi artículo, lo ignoramos y pasamos al siguiente
-                    if (!soyAdmin && !esMio) return; 
+            listaAdmin.innerHTML = ''; // Limpiamos la caja
 
-                    // Si pasamos el filtro, sumamos 1 al contador e imprimimos el artículo
-                    articulosMostrados++;
+            let articulosMostrados = 0; // Un contador para saber si pintamos algo en pantalla
 
-                    listaAdmin.innerHTML += `
+            articulos.forEach(art => {
+                // VERIFICACIÓN DE PERMISOS: ¿Soy admin o soy el creador de este artículo?
+                const soyAdmin = usuario.rol === 'admin';
+                const esMio = art.autor === usuario.nombre;
+
+                // Si NO soy admin y NO es mi artículo, lo ignoramos y pasamos al siguiente
+                if (!soyAdmin && !esMio) return;
+
+                // Si pasamos el filtro, sumamos 1 al contador e imprimimos el artículo
+                articulosMostrados++;
+
+                listaAdmin.innerHTML += `
                         <div style="border-bottom: 1px solid #ccc; padding: 10px 0; display: flex; justify-content: space-between; align-items: center;">
                             <span style="font-size: 18px;"><b>${art.titulo}</b> <br><span style="color: #555; font-size: 16px;">(Autor: ${art.autor})</span></span>
                             <div style="display: flex; gap: 5px;">
@@ -304,61 +303,61 @@ if (formPublicar) {
                             </div>
                         </div>
                     `;
+            });
+
+            // Si la lista terminó y el contador está en 0, mostramos un mensaje amigable
+            if (articulosMostrados === 0) {
+                listaAdmin.innerHTML = '<p style="color: #555; font-style: italic; font-size: 20px;">No tienes artículos publicados aún. ¡Anímate a escribir tu primera guía!</p>';
+            }
+
+        } catch (error) {
+            listaAdmin.innerHTML = '<p style="color: red;">Error al cargar artículos.</p>';
+        }
+    }
+
+    // Ejecutamos la carga al entrar al panel
+    cargarArticulosAdmin();
+
+    // Esta función debe ser "global" para que el botón HTML la encuentre
+    window.eliminarArticulo = async function (id) {
+        // Un pequeño popup de seguridad antes de borrar
+        if (confirm("¿Estás seguro de que quieres eliminar este artículo permanentemente?")) {
+            try {
+                const respuesta = await fetch(`http://localhost:3000/api/articulos/${id}`, {
+                    method: 'DELETE'
                 });
 
-                // Si la lista terminó y el contador está en 0, mostramos un mensaje amigable
-                if (articulosMostrados === 0) {
-                    listaAdmin.innerHTML = '<p style="color: #555; font-style: italic; font-size: 20px;">No tienes artículos publicados aún. ¡Anímate a escribir tu primera guía!</p>';
+                if (respuesta.ok) {
+                    alert("✅ Artículo eliminado con éxito.");
+                    cargarArticulosAdmin(); // Recargamos la listita
+                } else {
+                    alert("❌ Error al eliminar el artículo.");
                 }
-
-            } catch(error) {
-                listaAdmin.innerHTML = '<p style="color: red;">Error al cargar artículos.</p>';
+            } catch (error) {
+                alert("❌ Error de conexión con el servidor.");
             }
         }
-        
-        // Ejecutamos la carga al entrar al panel
-        cargarArticulosAdmin();
+    }
 
-        // Esta función debe ser "global" para que el botón HTML la encuentre
-        window.eliminarArticulo = async function(id) {
-            // Un pequeño popup de seguridad antes de borrar
-            if(confirm("¿Estás seguro de que quieres eliminar este artículo permanentemente?")) {
-                try {
-                    const respuesta = await fetch(`http://localhost:3000/api/articulos/${id}`, {
-                        method: 'DELETE'
-                    });
-                    
-                    if(respuesta.ok) {
-                        alert("✅ Artículo eliminado con éxito.");
-                        cargarArticulosAdmin(); // Recargamos la listita
-                    } else {
-                        alert("❌ Error al eliminar el artículo.");
-                    }
-                } catch(error) {
-                    alert("❌ Error de conexión con el servidor.");
-                }
-            }
-        }
-    
     // EL GUARDIA: Verificamos si hay alguien logeado
     if (!usuarioGuardado) {
         alert("Acceso denegado. Debes iniciar sesión.");
         window.location.href = 'login.html';
     } else {
         const usuario = JSON.parse(usuarioGuardado);
-        
+
         // 1. EL GUARDIA DE RANGOS
         if (usuario.rol !== 'admin' && usuario.rol !== 'escritor') {
             alert("Acceso denegado. Necesitas rango de Escritor o Administrador.");
             window.location.href = 'index.html';
-        } 
+        }
 
         // 2. IDENTIFICACIÓN EN PANTALLA (¡Esto repara el "Identificando..."!)
         const displayNombre = document.getElementById('admin-nombre-display');
         if (displayNombre) {
             displayNombre.innerHTML = `Operador: <b>${usuario.nombre}</b><br>Rol: <span style="color: ${usuario.rol === 'admin' ? '#d32f2f' : '#388E3C'}; font-weight: bold;">${usuario.rol.toUpperCase()}</span>`;
         }
-        
+
         // 3. ADAPTACIÓN VISUAL Y SEGURIDAD PARA ESCRITORES
         if (usuario.rol === 'escritor') {
             // Cambiamos los títulos para que el escritor se sienta en su propio espacio
@@ -378,7 +377,7 @@ if (formPublicar) {
         let articuloEnEdicionId = null;
 
         // --- ¡NUEVA FUNCIÓN! Preparar el formulario para editar ---
-        window.prepararEdicion = async function(id) {
+        window.prepararEdicion = async function (id) {
             try {
                 const respuesta = await fetch(`http://localhost:3000/api/articulos/${id}`);
                 const art = await respuesta.json();
@@ -386,7 +385,7 @@ if (formPublicar) {
                 // 1. Rellenamos las cajas de texto con la info de la base de datos
                 document.getElementById('post-titulo').value = art.titulo;
                 document.getElementById('post-categoria').value = art.categoria_id;
-                
+
                 // Ponemos el texto en el Mini-Word
                 if (typeof CKEDITOR !== 'undefined') {
                     CKEDITOR.instances['post-contenido'].setData(art.contenido);
@@ -396,16 +395,16 @@ if (formPublicar) {
 
                 // 2. Cambiamos el estado del sistema a "Modo Edición"
                 articuloEnEdicionId = art.id;
-                
+
                 // 3. Cambiamos el aspecto del botón y del título
                 const botonForm = document.querySelector('#formulario-publicar button');
                 botonForm.innerText = "💾 Actualizar Artículo";
                 botonForm.style.background = "#FF9800";
                 botonForm.style.borderColor = "#E65100";
-                
+
                 // Subimos la pantalla hacia arriba suavemente para que el usuario vea el formulario
                 window.scrollTo({ top: 0, behavior: 'smooth' });
-                
+
                 document.getElementById('mensaje-publicacion').innerText = "Modo edición activado. Modifica y guarda.";
                 document.getElementById('mensaje-publicacion').style.color = "#FF9800";
 
@@ -421,7 +420,7 @@ if (formPublicar) {
             const titulo = document.getElementById('post-titulo').value;
             const categoria_id = document.getElementById('post-categoria').value;
             const mensajePub = document.getElementById('mensaje-publicacion');
-            
+
             // ¡NUEVO! Leemos el contenido desde el Mini-Word en lugar del textarea normal
             let contenidoHTML = "";
             if (typeof CKEDITOR !== 'undefined') {
@@ -439,32 +438,32 @@ if (formPublicar) {
 
             // DECISIÓN INTELIGENTE: ¿Es un POST (Crear) o un PUT (Actualizar)?
             const metodo = articuloEnEdicionId ? 'PUT' : 'POST';
-            const url = articuloEnEdicionId 
-                        ? `http://localhost:3000/api/articulos/${articuloEnEdicionId}`
-                        : 'http://localhost:3000/api/articulos';
+            const url = articuloEnEdicionId
+                ? `http://localhost:3000/api/articulos/${articuloEnEdicionId}`
+                : 'http://localhost:3000/api/articulos';
 
             try {
                 const respuesta = await fetch(url, {
                     method: metodo,
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        titulo: titulo, 
-                        contenido: contenidoHTML, 
-                        categoria_id: parseInt(categoria_id), 
-                        autor_id: usuario.id 
+                    body: JSON.stringify({
+                        titulo: titulo,
+                        contenido: contenidoHTML,
+                        categoria_id: parseInt(categoria_id),
+                        autor_id: usuario.id
                     })
                 });
 
                 if (respuesta.ok) {
                     mensajePub.style.color = "green";
                     mensajePub.innerText = articuloEnEdicionId ? "✅ ¡Artículo actualizado!" : "✅ ¡Artículo publicado!";
-                    
+
                     // Limpiamos todo y volvemos a la normalidad
                     document.getElementById('post-titulo').value = "";
                     if (typeof CKEDITOR !== 'undefined') CKEDITOR.instances['post-contenido'].setData('');
-                    
+
                     articuloEnEdicionId = null; // Salimos del modo edición
-                    
+
                     const botonForm = document.querySelector('#formulario-publicar button');
                     botonForm.innerText = "Publicar Artículo al Servidor";
                     botonForm.style.background = "#4CAF50";
@@ -501,11 +500,11 @@ async function cargarArticuloCompleto() {
         const respuesta = await fetch(`http://localhost:3000/api/articulos/${id}`);
         if (!respuesta.ok) throw new Error("No encontrado");
         const art = await respuesta.json();
-        
+
         // Revisamos si hay alguien logeado para mostrarle la caja de escribir
         const usuarioGuardado = localStorage.getItem('usuarioLogeado');
         let formComentarioHTML = `<p style="color: #d32f2f; font-weight: bold;">Debes iniciar sesión para comentar.</p>`;
-        
+
         if (usuarioGuardado) {
             formComentarioHTML = `
                 <form id="formulario-comentario" style="margin-top: 15px;">
@@ -568,7 +567,7 @@ async function cargarComentarios(articuloId) {
             // ¡NUEVA LÓGICA DE PERMISOS!
             // Verificamos si el usuario actual es el dueño exacto de este comentario
             const esMiComentario = usuario && usuario.nombre === com.autor;
-            
+
             let botonBorrar = '';
             // El botón aparece SI eres admin O SI es tu propio comentario
             if (esAdmin || esMiComentario) {
@@ -618,7 +617,7 @@ function activarFormularioComentario(articuloId) {
 }
 
 // Función global para que el Admin borre comentarios
-window.borrarComentario = async function(id, articuloId) {
+window.borrarComentario = async function (id, articuloId) {
     if (confirm("¿Seguro que deseas eliminar este comentario?")) {
         try {
             const respuesta = await fetch(`http://localhost:3000/api/comentarios/${id}`, { method: 'DELETE' });
@@ -639,23 +638,23 @@ cargarArticuloCompleto();
 // --- Lógica de Gestión: Cargar Usuarios con Checkboxes ---
 async function cargarUsuariosAdmin() {
     const listaUsuarios = document.getElementById('admin-lista-usuarios');
-        if(!listaUsuarios) return;
+    if (!listaUsuarios) return;
 
-            try {
-                const respuesta = await fetch('http://localhost:3000/api/usuarios');
-                const usuarios = await respuesta.json();
-                
-                listaUsuarios.innerHTML = ''; 
-                
-                usuarios.forEach(user => {
-                    // Si está baneado, el botón dirá "Reactivar" (verde). Si está activo, dirá "Banear" (negro).
-                    const esBaneado = user.estado === 'baneado';
-                    const colorBoton = esBaneado ? '#4CAF50' : '#222';
-                    const textoBoton = esBaneado ? '✅ Reactivar' : '🔨 Banear';
-                    const nuevoEstado = esBaneado ? 'activo' : 'baneado';
-                    const colorNombre = esBaneado ? 'red; text-decoration: line-through;' : 'black;';
+    try {
+        const respuesta = await fetch('http://localhost:3000/api/usuarios');
+        const usuarios = await respuesta.json();
 
-                    listaUsuarios.innerHTML += `
+        listaUsuarios.innerHTML = '';
+
+        usuarios.forEach(user => {
+            // Si está baneado, el botón dirá "Reactivar" (verde). Si está activo, dirá "Banear" (negro).
+            const esBaneado = user.estado === 'baneado';
+            const colorBoton = esBaneado ? '#4CAF50' : '#222';
+            const textoBoton = esBaneado ? '✅ Reactivar' : '🔨 Banear';
+            const nuevoEstado = esBaneado ? 'activo' : 'baneado';
+            const colorNombre = esBaneado ? 'red; text-decoration: line-through;' : 'black;';
+
+            listaUsuarios.innerHTML += `
                         <div style="border-bottom: 1px solid #ccc; padding: 10px 0; display: flex; justify-content: space-between; align-items: center;">
                             <div>
                                 <input type="checkbox" class="chk-usuario" value="${user.id}" style="transform: scale(1.5); margin-right: 10px;">
@@ -664,158 +663,158 @@ async function cargarUsuariosAdmin() {
                             <button onclick="cambiarEstadoUsuario(${user.id}, '${nuevoEstado}')" style="background: ${colorBoton}; color: white; border: 2px solid #000; cursor: pointer; font-family: 'VT323'; font-size: 18px; padding: 5px 10px;">${textoBoton}</button>
                         </div>
                     `;
-                });
-            } catch(error) {
-                listaUsuarios.innerHTML = '<p style="color: red;">Error al cargar usuarios.</p>';
+        });
+    } catch (error) {
+        listaUsuarios.innerHTML = '<p style="color: red;">Error al cargar usuarios.</p>';
+    }
+}
+
+// ¡LA NUEVA FUNCIÓN MULTI-SELECCIÓN!
+window.aplicarRolMasivo = async function () {
+    // Buscamos todas las casillas que el administrador haya marcado
+    const checkboxes = document.querySelectorAll('.chk-usuario:checked');
+    const idsSeleccionados = Array.from(checkboxes).map(chk => chk.value);
+    const nuevoRol = document.getElementById('select-rol-masivo').value;
+
+    if (idsSeleccionados.length === 0) {
+        alert("⚠️ Por favor, selecciona al menos un usuario de la lista.");
+        return;
+    }
+
+    if (confirm(`¿Ascender a los ${idsSeleccionados.length} usuarios seleccionados al rol de ${nuevoRol.toUpperCase()}?`)) {
+        try {
+            const respuesta = await fetch('http://localhost:3000/api/usuarios/roles', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ids: idsSeleccionados, nuevoRol: nuevoRol })
+            });
+
+            if (respuesta.ok) {
+                alert("✅ Roles actualizados con éxito.");
+                cargarUsuariosAdmin(); // Recargamos para ver los cambios
+            } else {
+                alert("❌ Hubo un error al aplicar los roles.");
             }
+        } catch (error) {
+            alert("❌ Error de conexión con el servidor.");
         }
+    }
+}
 
-        // ¡LA NUEVA FUNCIÓN MULTI-SELECCIÓN!
-        window.aplicarRolMasivo = async function() {
-            // Buscamos todas las casillas que el administrador haya marcado
-            const checkboxes = document.querySelectorAll('.chk-usuario:checked');
-            const idsSeleccionados = Array.from(checkboxes).map(chk => chk.value);
-            const nuevoRol = document.getElementById('select-rol-masivo').value;
+cargarUsuariosAdmin(); // Ejecutamos la carga
 
-            if (idsSeleccionados.length === 0) {
-                alert("⚠️ Por favor, selecciona al menos un usuario de la lista.");
-                return;
+// Función global para el botón de banear/reactivar
+window.cambiarEstadoUsuario = async function (id, nuevoEstado) {
+    if (confirm(`¿Seguro que quieres cambiar el estado de este usuario a ${nuevoEstado.toUpperCase()}?`)) {
+        try {
+            const respuesta = await fetch(`http://localhost:3000/api/usuarios/${id}/estado`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ estado: nuevoEstado })
+            });
+
+            if (respuesta.ok) {
+                cargarUsuariosAdmin(); // Recargamos la lista visualmente
+            } else {
+                alert("❌ Error al actualizar el usuario.");
             }
-
-            if (confirm(`¿Ascender a los ${idsSeleccionados.length} usuarios seleccionados al rol de ${nuevoRol.toUpperCase()}?`)) {
-                try {
-                    const respuesta = await fetch('http://localhost:3000/api/usuarios/roles', {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ ids: idsSeleccionados, nuevoRol: nuevoRol })
-                    });
-
-                    if (respuesta.ok) {
-                        alert("✅ Roles actualizados con éxito.");
-                        cargarUsuariosAdmin(); // Recargamos para ver los cambios
-                    } else {
-                        alert("❌ Hubo un error al aplicar los roles.");
-                    }
-                } catch (error) {
-                    alert("❌ Error de conexión con el servidor.");
-                }
-            }
+        } catch (error) {
+            alert("❌ Error de conexión.");
         }
+    }
+}
 
-        cargarUsuariosAdmin(); // Ejecutamos la carga
+// --- Lógica de Gestión: Categorías Dinámicas (Mejorada) ---
+async function cargarCategorias() {
+    const selectCategoria = document.getElementById('post-categoria');
+    const listaCategoriasVisual = document.getElementById('admin-lista-categorias'); // La nueva caja
 
-        // Función global para el botón de banear/reactivar
-        window.cambiarEstadoUsuario = async function(id, nuevoEstado) {
-            if(confirm(`¿Seguro que quieres cambiar el estado de este usuario a ${nuevoEstado.toUpperCase()}?`)) {
-                try {
-                    const respuesta = await fetch(`http://localhost:3000/api/usuarios/${id}/estado`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ estado: nuevoEstado })
-                    });
-                    
-                    if(respuesta.ok) {
-                        cargarUsuariosAdmin(); // Recargamos la lista visualmente
-                    } else {
-                        alert("❌ Error al actualizar el usuario.");
-                    }
-                } catch(error) {
-                    alert("❌ Error de conexión.");
-                }
-            }
-        }
+    if (!selectCategoria) return;
 
-        // --- Lógica de Gestión: Categorías Dinámicas (Mejorada) ---
-        async function cargarCategorias() {
-            const selectCategoria = document.getElementById('post-categoria');
-            const listaCategoriasVisual = document.getElementById('admin-lista-categorias'); // La nueva caja
+    try {
+        const respuesta = await fetch('http://localhost:3000/api/categorias');
+        const categorias = await respuesta.json();
 
-            if(!selectCategoria) return;
+        // 1. Llenamos el menú desplegable (como antes)
+        selectCategoria.innerHTML = '';
+        categorias.forEach(cat => {
+            selectCategoria.innerHTML += `<option value="${cat.id}">${cat.nombre_categoria}</option>`;
+        });
 
-            try {
-                const respuesta = await fetch('http://localhost:3000/api/categorias');
-                const categorias = await respuesta.json();
-
-                // 1. Llenamos el menú desplegable (como antes)
-                selectCategoria.innerHTML = ''; 
-                categorias.forEach(cat => {
-                    selectCategoria.innerHTML += `<option value="${cat.id}">${cat.nombre_categoria}</option>`;
-                });
-
-                // 2. ¡NUEVO! Llenamos la lista visual con el botón de borrar
-                if(listaCategoriasVisual) {
-                    listaCategoriasVisual.innerHTML = '';
-                    categorias.forEach(cat => {
-                        listaCategoriasVisual.innerHTML += `
+        // 2. ¡NUEVO! Llenamos la lista visual con el botón de borrar
+        if (listaCategoriasVisual) {
+            listaCategoriasVisual.innerHTML = '';
+            categorias.forEach(cat => {
+                listaCategoriasVisual.innerHTML += `
                             <div style="border-bottom: 1px solid #eee; padding: 5px 0; display: flex; justify-content: space-between; align-items: center;">
                                 <span>🏷️ ${cat.nombre_categoria}</span>
                                 <button onclick="eliminarCategoria(${cat.id})" style="background: #d32f2f; color: white; border: 1px solid #b71c1c; cursor: pointer; font-size: 14px; padding: 2px 5px;">Borrar</button>
                             </div>
                         `;
-                    });
-                }
-
-            } catch(error) {
-                console.error("Error al cargar las categorías.");
-                if(listaCategoriasVisual) listaCategoriasVisual.innerHTML = '<p style="color:red;">Error cargando lista.</p>';
-            }
-        }
-        
-        // Ejecutamos la carga al entrar
-        cargarCategorias();
-
-        // ¡NUEVA FUNCIÓN! El botón para borrar la categoría
-        window.eliminarCategoria = async function(id) {
-            if(confirm("¿Seguro que deseas eliminar esta categoría? Si tiene artículos, no podrás hacerlo.")) {
-                try {
-                    const respuesta = await fetch(`http://localhost:3000/api/categorias/${id}`, {
-                        method: 'DELETE'
-                    });
-                    
-                    if(respuesta.ok) {
-                        cargarCategorias(); // Recargamos la lista y el menú desplegable
-                    } else {
-                        const mensajeError = await respuesta.text();
-                        alert("❌ " + mensajeError);
-                    }
-                } catch(error) {
-                    alert("❌ Error de conexión al intentar borrar.");
-                }
-            }
-        }
-
-        // Lógica para el botón de crear nueva categoría
-        const formCategoria = document.getElementById('formulario-categoria');
-        if(formCategoria) {
-            formCategoria.addEventListener('submit', async (evento) => {
-                evento.preventDefault();
-                const nombre_categoria = document.getElementById('nueva-categoria').value;
-                const mensajeCat = document.getElementById('mensaje-categoria');
-
-                try {
-                    const respuesta = await fetch('http://localhost:3000/api/categorias', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ nombre_categoria })
-                    });
-
-                    if(respuesta.ok) {
-                        mensajeCat.style.color = "green";
-                        mensajeCat.innerText = "✅ Categoría añadida exitosamente.";
-                        document.getElementById('nueva-categoria').value = ""; // Limpiamos la cajita
-                        
-                        // ¡MAGIA! Recargamos el menú desplegable de arriba para que aparezca la nueva
-                        cargarCategorias(); 
-                    } else {
-                        mensajeCat.style.color = "red";
-                        mensajeCat.innerText = "❌ Error al añadir la categoría.";
-                    }
-                } catch(error) {
-                    mensajeCat.style.color = "red";
-                    mensajeCat.innerText = "❌ Error de conexión con el servidor.";
-                }
             });
         }
+
+    } catch (error) {
+        console.error("Error al cargar las categorías.");
+        if (listaCategoriasVisual) listaCategoriasVisual.innerHTML = '<p style="color:red;">Error cargando lista.</p>';
+    }
+}
+
+// Ejecutamos la carga al entrar
+cargarCategorias();
+
+// ¡NUEVA FUNCIÓN! El botón para borrar la categoría
+window.eliminarCategoria = async function (id) {
+    if (confirm("¿Seguro que deseas eliminar esta categoría? Si tiene artículos, no podrás hacerlo.")) {
+        try {
+            const respuesta = await fetch(`http://localhost:3000/api/categorias/${id}`, {
+                method: 'DELETE'
+            });
+
+            if (respuesta.ok) {
+                cargarCategorias(); // Recargamos la lista y el menú desplegable
+            } else {
+                const mensajeError = await respuesta.text();
+                alert("❌ " + mensajeError);
+            }
+        } catch (error) {
+            alert("❌ Error de conexión al intentar borrar.");
+        }
+    }
+}
+
+// Lógica para el botón de crear nueva categoría
+const formCategoria = document.getElementById('formulario-categoria');
+if (formCategoria) {
+    formCategoria.addEventListener('submit', async (evento) => {
+        evento.preventDefault();
+        const nombre_categoria = document.getElementById('nueva-categoria').value;
+        const mensajeCat = document.getElementById('mensaje-categoria');
+
+        try {
+            const respuesta = await fetch('http://localhost:3000/api/categorias', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nombre_categoria })
+            });
+
+            if (respuesta.ok) {
+                mensajeCat.style.color = "green";
+                mensajeCat.innerText = "✅ Categoría añadida exitosamente.";
+                document.getElementById('nueva-categoria').value = ""; // Limpiamos la cajita
+
+                // ¡MAGIA! Recargamos el menú desplegable de arriba para que aparezca la nueva
+                cargarCategorias();
+            } else {
+                mensajeCat.style.color = "red";
+                mensajeCat.innerText = "❌ Error al añadir la categoría.";
+            }
+        } catch (error) {
+            mensajeCat.style.color = "red";
+            mensajeCat.innerText = "❌ Error de conexión con el servidor.";
+        }
+    });
+}
 
 // --- LÓGICA DEL BUSCADOR EN EL MENÚ PRINCIPAL ---
 const btnBuscar = document.getElementById('btn-buscar');
@@ -843,7 +842,7 @@ const formPerfil = document.getElementById('formulario-perfil');
 
 if (formPerfil) {
     const usuarioGuardado = localStorage.getItem('usuarioLogeado');
-    
+
     if (!usuarioGuardado) {
         alert("Debes iniciar sesión para ver tu perfil.");
         window.location.href = 'login.html';
@@ -856,7 +855,7 @@ if (formPerfil) {
         document.getElementById('perfil-descripcion').value = usuario.descripcion || '';
         // Ahora cargamos la foto directamente de la base de datos (con la URL que nos de el backend)
         const fotoActual = usuario.foto_perfil || 'img/steve.png';
-        
+
         // ¡OJO! Si la foto empieza con '/uploads/', debemos sumarle el servidor (localhost:3000)
         const urlFotoCompleta = fotoActual.startsWith('/uploads/') ? `http://localhost:3000${fotoActual}` : fotoActual;
         document.getElementById('preview-avatar').src = urlFotoCompleta;
@@ -868,7 +867,7 @@ if (formPerfil) {
         if (btnCambiarFoto && inputArchivo) {
             // 1. Al hacer clic en el botón naranja, "apretamos" el input invisible
             btnCambiarFoto.addEventListener('click', () => {
-                inputArchivo.click(); 
+                inputArchivo.click();
             });
 
             // 2. Cuando el usuario selecciona un archivo en su PC
@@ -891,7 +890,7 @@ if (formPerfil) {
             const nuevoNombre = document.getElementById('perfil-nombre').value;
             const nuevaContrasena = document.getElementById('perfil-contrasena').value;
             // ¡NUEVO! Capturamos lo que escribió en la caja
-            const nuevaDescripcion = document.getElementById('perfil-descripcion').value; 
+            const nuevaDescripcion = document.getElementById('perfil-descripcion').value;
             const mensaje = document.getElementById('mensaje-perfil');
 
             // ¡LA MAGIA! Creamos un objeto FormData en lugar de un JSON normal
@@ -899,7 +898,7 @@ if (formPerfil) {
             datosEnviar.append('nombre_usuario', nuevoNombre);
             datosEnviar.append('nueva_contrasena', nuevaContrasena);
             datosEnviar.append('descripcion', nuevaDescripcion); // <-- ¡Añadimos esto al paquete!
-            
+
             // Añadimos el archivo real si el usuario seleccionó uno
             if (inputArchivo.files[0]) {
                 datosEnviar.append('foto', inputArchivo.files[0]);
@@ -917,14 +916,14 @@ if (formPerfil) {
 
                 if (respuesta.ok) {
                     const data = await respuesta.json(); // Obtenemos la respuesta JSON del servidor
-                    
+
                     mensaje.style.color = "green";
                     mensaje.innerText = "✅ Perfil actualizado con éxito.";
 
                     // Actualizamos la memoria del navegador con los nuevos datos
                     usuario.nombre = nuevoNombre;
                     usuario.descripcion = nuevaDescripcion; // <-- ¡Añadimos esto!
-                    
+
                     // Si el servidor nos devolvió una nueva URL de foto, la guardamos
                     if (data.nuevaFoto) {
                         usuario.foto_perfil = data.nuevaFoto;
@@ -932,7 +931,7 @@ if (formPerfil) {
                     localStorage.setItem('usuarioLogeado', JSON.stringify(usuario));
 
                     document.getElementById('perfil-contrasena').value = '';
-                    
+
                     // Recargamos el menú lateral para que la foto pequeña se actualice
                     verificarSesion();
                 } else {
@@ -966,15 +965,15 @@ async function cargarPerfilPublico() {
         const respuesta = await fetch(`http://localhost:3000/api/usuarios/publico/${nombreUsuarioURL}`);
         if (!respuesta.ok) throw new Error("No encontrado");
         const perfil = await respuesta.json();
-        
-        const urlFotoCompleta = (perfil.foto_perfil && perfil.foto_perfil.startsWith('/uploads/')) 
-                                ? `http://localhost:3000${perfil.foto_perfil}` 
-                                : (perfil.foto_perfil || 'img/steve.png');
+
+        const urlFotoCompleta = (perfil.foto_perfil && perfil.foto_perfil.startsWith('/uploads/'))
+            ? `http://localhost:3000${perfil.foto_perfil}`
+            : (perfil.foto_perfil || 'img/steve.png');
 
         document.getElementById('pub-foto').src = urlFotoCompleta;
         document.getElementById('pub-nombre').innerText = perfil.nombre_usuario;
         document.getElementById('pub-descripcion').innerText = perfil.descripcion || "Este usuario aún no ha escrito su biografía.";
-        
+
         const spanRol = document.getElementById('pub-rol');
         spanRol.innerText = perfil.rol.toUpperCase();
         spanRol.style.background = perfil.rol === 'admin' ? '#d32f2f' : '#388E3C';
@@ -1001,7 +1000,7 @@ async function cargarPerfilPublico() {
                     `;
                 });
             }
-        } catch(e) { listaArticulos.innerHTML = '<p style="color: red;">Error al cargar artículos.</p>'; }
+        } catch (e) { listaArticulos.innerHTML = '<p style="color: red;">Error al cargar artículos.</p>'; }
 
         // Muestramos la tarjeta
         tarjetaPerfil.style.display = 'block';
@@ -1019,15 +1018,15 @@ async function cargarPerfilPublico() {
                 btnBan.style.background = esBaneado ? '#4CAF50' : '#222';
                 btnBan.addEventListener('click', async () => {
                     const nuevoEstado = esBaneado ? 'activo' : 'baneado';
-                    if(confirm(`¿Seguro que quieres bamear/reactivar a ${perfil.nombre_usuario}?`)) {
+                    if (confirm(`¿Seguro que quieres bamear/reactivar a ${perfil.nombre_usuario}?`)) {
                         try {
                             const resBan = await fetch(`http://localhost:3000/api/usuarios/${perfil.id}/estado`, {
                                 method: 'PUT',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({ estado: nuevoEstado })
                             });
-                            if(resBan.ok) location.reload();
-                        } catch(e) { alert("Error de conexión."); }
+                            if (resBan.ok) location.reload();
+                        } catch (e) { alert("Error de conexión."); }
                     }
                 });
             }
