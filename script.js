@@ -1035,3 +1035,11 @@ async function cargarPerfilPublico() {
 }
 
 cargarPerfilPublico();
+
+// --- LÓGICA DEL CHAT FLOTANTE ---
+window.toggleChat = function() {
+    const contenedorChat = document.getElementById('contenedor-chat-flotante');
+    if (contenedorChat) {
+        contenedorChat.classList.toggle('abierto');
+    }
+}
