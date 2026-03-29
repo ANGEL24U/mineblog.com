@@ -233,7 +233,7 @@ function verificarSesion() {
         }
 
         // ¡EL BOTÓN SECRETO! Administradores y Escritores tienen acceso al Dashboard
-        if (usuario.rol === 'admin') {
+        if (usuario.rol === 'admin' || usuario.rol === 'owner') { // <--- Añadimos owner
             htmlPerfil += `<li><a href="dashboard.html" style="color: #d32f2f; font-weight: bold;">🛠️ Panel de Admin</a></li>`;
         } else if (usuario.rol === 'escritor') {
             htmlPerfil += `<li><a href="dashboard.html" style="color: #388E3C; font-weight: bold;">✍️ Escribir Artículo</a></li>`;
@@ -262,61 +262,172 @@ verificarSesion();
 // --- LÓGICA DEL PANEL DE ADMINISTRACIÓN (DASHBOARD) ---
 const formPublicar = document.getElementById('formulario-publicar');
 
+// 1. CARGA DE ROLES MAESTROS (Independiente)
+async function cargarRolesMaestros() {
+    const tablaRoles = document.getElementById('tabla-roles-db');
+    const selectRolMasivo = document.getElementById('select-rol-masivo'); // El selector de acciones masivas
+    if (!tablaRoles) return;
+
+    try {
+        const respuesta = await fetch('http://localhost:3000/api/roles');
+        const roles = await respuesta.json();
+
+        // 1. Limpiamos la lista visual y el selector
+        tablaRoles.innerHTML = ''; 
+        if (selectRolMasivo) selectRolMasivo.innerHTML = '';
+
+        roles.forEach(rol => {
+            // A. Llenamos la lista visual (la que ya tenías)
+            tablaRoles.innerHTML += `
+                <div style="border-bottom: 1px solid #eee; padding: 8px; display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-size: 20px; font-weight: bold; color: #1B5E20;">🏷️ ${rol.nombre_rol.toUpperCase()}</span>
+                    <span style="font-size: 16px; color: #666;">ID: ${rol.id}</span>
+                </div>
+            `;
+
+            // B. ¡NUEVO! Llenamos el menú desplegable de gestión de usuarios
+            if (selectRolMasivo) {
+                const option = document.createElement('option');
+                option.value = rol.nombre_rol; // El valor que enviamos al servidor (ej: 'owner')
+                
+                // Texto bonito para el admin
+                let textoMostrar = `Asignar rango: ${rol.nombre_rol.toUpperCase()}`;
+                if (rol.nombre_rol === 'usuario') textoMostrar = "Quitar permisos (Usuario)";
+                
+                option.innerText = textoMostrar;
+                selectRolMasivo.appendChild(option);
+            }
+        });
+
+    } catch (error) {
+        tablaRoles.innerHTML = '<p style="color: red;">Error al conectar con Arch Linux.</p>';
+    }
+}
+
+// 2. CREACIÓN DE ROLES (Global)
+window.crearNuevoRol = async function() {
+    const nombreInput = document.getElementById('nuevo-rol-nombre');
+    const checkboxes = document.querySelectorAll('#contenedor-permisos input:checked');
+    if (!nombreInput.value.trim()) return alert("Escribe un nombre para el rango.");
+
+    const permisosSeleccionados = Array.from(checkboxes).map(cb => cb.value);
+
+    try {
+        const respuesta = await fetch('http://localhost:3000/api/roles', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nombre: nombreInput.value.toLowerCase(), permisos: permisosSeleccionados })
+        });
+
+        if (respuesta.ok) {
+            alert("✨ ¡Rango Maestro creado!");
+            nombreInput.value = '';
+            cargarRolesMaestros(); 
+        } else { alert("❌ Error al crear rango."); }
+    } catch (error) { alert("❌ Error de conexión."); }
+}
+
+// 3. CARGA DE ARTÍCULOS PARA ADMIN
+async function cargarArticulosAdmin() {
+    const listaAdmin = document.getElementById('admin-lista-articulos');
+    if (!listaAdmin) return;
+    const usuarioData = localStorage.getItem('usuarioLogeado');
+    if (!usuarioData) return;
+    const usuario = JSON.parse(usuarioData);
+
+    try {
+        const respuesta = await fetch('http://localhost:3000/api/articulos');
+        const paqueteDatos = await respuesta.json(); 
+        const articulos = paqueteDatos.articulos;
+        listaAdmin.innerHTML = '';
+        let contador = 0;
+
+        articulos.forEach(art => {
+            if (usuario.rol !== 'admin' && usuario.rol !== 'owner' && art.autor !== usuario.nombre) return;
+            contador++;
+            listaAdmin.innerHTML += `
+                <div style="border-bottom: 1px solid #ccc; padding: 10px 0; display: flex; justify-content: space-between; align-items: center;">
+                    <span><b>${art.titulo}</b> (${art.autor})</span>
+                    <div>
+                        <button onclick="prepararEdicion(${art.id})" style="background: #FF9800; color: white; padding: 5px 10px;">✏️ Editar</button>
+                        <button onclick="eliminarArticulo(${art.id})" style="background: #d32f2f; color: white; padding: 5px 10px;">🗑️ Eliminar</button>
+                    </div>
+                </div>`;
+        });
+        if (contador === 0) listaAdmin.innerHTML = '<p>No hay artículos para mostrar.</p>';
+    } catch (error) { listaAdmin.innerHTML = '<p style="color:red;">Error cargando artículos.</p>'; }
+}
+
 if (formPublicar) {
     const usuarioGuardado = localStorage.getItem('usuarioLogeado');
+    if (!usuarioGuardado) {
+        window.location.href = 'login.html';
+    } else {
+        const usuario = JSON.parse(usuarioGuardado);
+        
+        // Ejecutamos cargas iniciales
+        cargarArticulosAdmin();
+        cargarUsuariosAdmin();
+        cargarCategorias();
+        cargarRolesMaestros(); // ¡Ahora sí se ejecutará!
 
-    // --- Lógica de Gestión: Cargar y Eliminar Artículos ---
-    async function cargarArticulosAdmin() {
-        const listaAdmin = document.getElementById('admin-lista-articulos');
-        if (!listaAdmin) return;
+        // Lógica de visibilidad
+        const displayNombre = document.getElementById('admin-nombre-display');
+        if (displayNombre) {
+            displayNombre.innerHTML = `Operador: <b>${usuario.nombre}</b><br>Rol: <span style="color: ${usuario.rol === 'admin' ? '#d32f2f' : '#388E3C'}; font-weight: bold;">${usuario.rol.toUpperCase()}</span>`;
+        }
 
-        // ¡EL PARCHE! Rescatamos los datos del usuario directamente aquí
-        const usuarioData = localStorage.getItem('usuarioLogeado');
-        if (!usuarioData) return;
-        const usuario = JSON.parse(usuarioData);
-
-        try {
-            const respuesta = await fetch('http://localhost:3000/api/articulos');
-            const articulos = await respuesta.json();
-
-            listaAdmin.innerHTML = ''; // Limpiamos la caja
-
-            let articulosMostrados = 0; // Un contador para saber si pintamos algo en pantalla
-
-            articulos.forEach(art => {
-                // VERIFICACIÓN DE PERMISOS: ¿Soy admin o soy el creador de este artículo?
-                const soyAdmin = usuario.rol === 'admin';
-                const esMio = art.autor === usuario.nombre;
-
-                // Si NO soy admin y NO es mi artículo, lo ignoramos y pasamos al siguiente
-                if (!soyAdmin && !esMio) return;
-
-                // Si pasamos el filtro, sumamos 1 al contador e imprimimos el artículo
-                articulosMostrados++;
-
-                listaAdmin.innerHTML += `
-                        <div style="border-bottom: 1px solid #ccc; padding: 10px 0; display: flex; justify-content: space-between; align-items: center;">
-                            <span style="font-size: 18px;"><b>${art.titulo}</b> <br><span style="color: #555; font-size: 16px;">(Autor: ${art.autor})</span></span>
-                            <div style="display: flex; gap: 5px;">
-                                <button onclick="prepararEdicion(${art.id})" style="background: #FF9800; color: white; border: 2px solid #E65100; cursor: pointer; font-family: 'VT323'; font-size: 18px; padding: 5px 10px;">✏️ Editar</button>
-                                <button onclick="eliminarArticulo(${art.id})" style="background: #d32f2f; color: white; border: 2px solid #b71c1c; cursor: pointer; font-family: 'VT323'; font-size: 18px; padding: 5px 10px;">🗑️ Eliminar</button>
-                            </div>
-                        </div>
-                    `;
-            });
-
-            // Si la lista terminó y el contador está en 0, mostramos un mensaje amigable
-            if (articulosMostrados === 0) {
-                listaAdmin.innerHTML = '<p style="color: #555; font-style: italic; font-size: 20px;">No tienes artículos publicados aún. ¡Anímate a escribir tu primera guía!</p>';
+        if (usuario.rol === 'admin' || usuario.rol === 'owner') {
+            const seccionRoles = document.getElementById('seccion-roles-maestros');
+            if (seccionRoles) seccionRoles.style.display = 'block';
+            if (usuario.rol === 'owner') {
+                const h = document.querySelector('header');
+                h.style.backgroundColor = '#4A148C';
+                h.querySelector('h1').innerText = "👑 PANEL SUPREMO (OWNER) 👑";
             }
-
-        } catch (error) {
-            listaAdmin.innerHTML = '<p style="color: red;">Error al cargar artículos.</p>';
         }
     }
+}
+
+// --- NUEVA FUNCIÓN: CREAR UN NUEVO ROL (OWNER, MOD, ETC) ---
+window.crearNuevoRol = async function() {
+    const nombreInput = document.getElementById('nuevo-rol-nombre');
+    const checkboxes = document.querySelectorAll('#contenedor-permisos input:checked');
+    
+    if (!nombreInput.value.trim()) return alert("Escribe un nombre para el rango.");
+
+    // Recopilamos los permisos marcados
+    const permisosSeleccionados = Array.from(checkboxes).map(cb => cb.value);
+
+    try {
+        const respuesta = await fetch('http://localhost:3000/api/roles', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                nombre: nombreInput.value.toLowerCase(),
+                permisos: permisosSeleccionados
+            })
+        });
+
+        if (respuesta.ok) {
+            alert("✨ ¡Rango Maestro creado exitosamente!");
+            nombreInput.value = ''; // Limpiamos
+            cargarRolesMaestros(); // Recargamos la lista
+        } else {
+            alert("❌ Error al crear el rango.");
+        }
+    } catch (error) {
+        alert("❌ Error de conexión.");
+    }
+}
+
+// Ejecutamos la carga inicial
+cargarRolesMaestros();
 
     // Ejecutamos la carga al entrar al panel
     cargarArticulosAdmin();
+
+    
 
     // Esta función debe ser "global" para que el botón HTML la encuentre
     window.eliminarArticulo = async function (id) {
@@ -347,7 +458,7 @@ if (formPublicar) {
         const usuario = JSON.parse(usuarioGuardado);
 
         // 1. EL GUARDIA DE RANGOS
-        if (usuario.rol !== 'admin' && usuario.rol !== 'escritor') {
+        if (usuario.rol !== 'admin' && usuario.rol !== 'escritor' && usuario.rol !== 'owner') {
             alert("Acceso denegado. Necesitas rango de Escritor o Administrador.");
             window.location.href = 'index.html';
         }
@@ -370,6 +481,21 @@ if (formPublicar) {
             // ¡SEGURIDAD! Ocultamos definitivamente la zona de Usuarios y Categorías
             const zonaAdmin = document.getElementById('zona-admin-exclusiva');
             if (zonaAdmin) zonaAdmin.style.display = 'none';
+        }
+
+            // --- 4. GESTIÓN DE ROLES MAESTROS (ADMIN Y OWNER) ---
+        if (usuario.rol === 'admin' || usuario.rol === 'owner') {
+            const seccionRoles = document.getElementById('seccion-roles-maestros');
+            if (seccionRoles) seccionRoles.style.display = 'block';
+
+            // Toque especial para el Owner
+                if (usuario.rol === 'owner') {
+                const header = document.querySelector('header');
+                if (header) {
+                        header.style.backgroundColor = '#4A148C'; // Morado Real
+                        header.querySelector('h1').innerText = "👑 PANEL SUPREMO (OWNER) 👑";
+                }
+            }
         }
 
         // --- Lógica para enviar el artículo a la base de datos ---
@@ -481,7 +607,6 @@ if (formPublicar) {
             }
         });
     }
-}
 
 // --- LÓGICA DE LECTURA DE ARTÍCULO INDIVIDUAL Y COMENTARIOS ---
 async function cargarArticuloCompleto() {
