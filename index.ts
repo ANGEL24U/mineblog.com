@@ -57,7 +57,7 @@ const pool = new Pool({
 
 pool.connect().then(() => {
   console.log("=================================================");
-  console.log("🐘 ✅ Conectado a PostgreSQL en Arch Linux 🐧");
+  console.log("          ✅ Conectado al servidor"               );
   console.log("=================================================");
 }).catch(err => {
   console.error("❌ Error conectando a PostgreSQL:", err);
@@ -148,6 +148,26 @@ app.post('/api/articulos', async (req, res) => {
     res.status(201).send('¡Artículo creado con éxito en PostgreSQL!');
   } catch (error) {
     res.status(500).send('Hubo un error al guardar el artículo.');
+  }
+});
+
+// Actualizar un artículo existente (Modo Edición)
+app.put('/api/articulos/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { titulo, contenido, categoria_id } = req.body;
+    
+    const query = `
+      UPDATE Articulos 
+      SET titulo = $1, contenido = $2, categoria_id = $3 
+      WHERE id = $4
+    `;
+    
+    await pool.query(query, [titulo, contenido, categoria_id, id]);
+    res.status(200).send('Artículo actualizado con éxito en PostgreSQL.');
+  } catch (error) {
+    console.error("Error al actualizar:", error);
+    res.status(500).send('Hubo un error interno al actualizar el artículo.');
   }
 });
 
@@ -305,6 +325,21 @@ app.post('/api/categorias', async (req, res) => {
     res.status(201).send('Categoría creada con éxito.');
   } catch (error) {
     res.status(500).send('Error interno al crear categoría.');
+  }
+});
+
+// Eliminar categoría
+app.delete('/api/categorias/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await pool.query('DELETE FROM Categorias WHERE id = $1', [id]);
+    res.status(200).send('Categoría eliminada.');
+  } catch (error: any) {
+    // Si la categoría ya tiene artículos vinculados, PostgreSQL bloqueará el borrado por seguridad
+    if (error.code === '23503') {
+        return res.status(400).send('No puedes borrar una categoría que ya tiene artículos.');
+    }
+    res.status(500).send('Error interno al eliminar categoría.');
   }
 });
 

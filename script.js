@@ -342,8 +342,14 @@ async function cargarArticulosAdmin() {
         listaAdmin.innerHTML = '';
         let contador = 0;
 
+        // --- ¡EL FIX ESTÁ AQUÍ! Definimos la variable antes del bucle ---
+        const rolNormalizado = usuario.rol ? usuario.rol.toLowerCase().trim() : '';
+        const esModerador = (rolNormalizado === 'admin' || rolNormalizado === 'owner');
+
         articulos.forEach(art => {
-            if (usuario.rol !== 'admin' && usuario.rol !== 'owner' && art.autor !== usuario.nombre) return;
+            // Ahora sí sabe qué significa "esModerador"
+            if (!esModerador && art.autor !== usuario.nombre) return;
+            
             contador++;
             listaAdmin.innerHTML += `
                 <div style="border-bottom: 1px solid #ccc; padding: 10px 0; display: flex; justify-content: space-between; align-items: center;">
@@ -355,7 +361,10 @@ async function cargarArticulosAdmin() {
                 </div>`;
         });
         if (contador === 0) listaAdmin.innerHTML = '<p>No hay artículos para mostrar.</p>';
-    } catch (error) { listaAdmin.innerHTML = '<p style="color:red;">Error cargando artículos.</p>'; }
+    } catch (error) { 
+        console.error("Error exacto:", error); // Esto te ayudará si vuelve a fallar
+        listaAdmin.innerHTML = '<p style="color:red;">Error cargando artículos.</p>'; 
+    }
 }
 
 if (formPublicar) {
@@ -450,7 +459,12 @@ cargarRolesMaestros();
         }
     }
 
-    // EL GUARDIA: Verificamos si hay alguien logeado
+// EL GUARDIA (REPARADO): Ahora solo vigila si estamos en el Dashboard
+const zonaDashboard = document.getElementById('formulario-publicar');
+
+if (zonaDashboard) {
+    const usuarioGuardado = localStorage.getItem('usuarioLogeado');
+
     if (!usuarioGuardado) {
         alert("Acceso denegado. Debes iniciar sesión.");
         window.location.href = 'login.html';
@@ -463,7 +477,7 @@ cargarRolesMaestros();
             window.location.href = 'index.html';
         }
 
-        // 2. IDENTIFICACIÓN EN PANTALLA (¡Esto repara el "Identificando..."!)
+        // 2. IDENTIFICACIÓN EN PANTALLA
         const displayNombre = document.getElementById('admin-nombre-display');
         if (displayNombre) {
             displayNombre.innerHTML = `Operador: <b>${usuario.nombre}</b><br>Rol: <span style="color: ${usuario.rol === 'admin' ? '#d32f2f' : '#388E3C'}; font-weight: bold;">${usuario.rol.toUpperCase()}</span>`;
@@ -471,75 +485,137 @@ cargarRolesMaestros();
 
         // 3. ADAPTACIÓN VISUAL Y SEGURIDAD PARA ESCRITORES
         if (usuario.rol === 'escritor') {
-            // Cambiamos los títulos para que el escritor se sienta en su propio espacio
             const headerTitulo = document.querySelector('header h1');
             if (headerTitulo) headerTitulo.innerText = "✍️ PANEL DE ESCRITOR ✍️";
-
             const sidebarTitulo = document.querySelector('#columna-sidebar h3');
             if (sidebarTitulo) sidebarTitulo.innerText = "👤 Modo Escritor";
-
-            // ¡SEGURIDAD! Ocultamos definitivamente la zona de Usuarios y Categorías
             const zonaAdmin = document.getElementById('zona-admin-exclusiva');
             if (zonaAdmin) zonaAdmin.style.display = 'none';
         }
 
-            // --- 4. GESTIÓN DE ROLES MAESTROS (ADMIN Y OWNER) ---
+        // 4. GESTIÓN DE ROLES MAESTROS (ADMIN Y OWNER)
         if (usuario.rol === 'admin' || usuario.rol === 'owner') {
             const seccionRoles = document.getElementById('seccion-roles-maestros');
             if (seccionRoles) seccionRoles.style.display = 'block';
-
-            // Toque especial para el Owner
-                if (usuario.rol === 'owner') {
+            if (usuario.rol === 'owner') {
                 const header = document.querySelector('header');
                 if (header) {
-                        header.style.backgroundColor = '#4A148C'; // Morado Real
-                        header.querySelector('h1').innerText = "👑 PANEL SUPREMO (OWNER) 👑";
+                    header.style.backgroundColor = '#4A148C';
+                    header.querySelector('h1').innerText = "👑 PANEL SUPREMO (OWNER) 👑";
                 }
             }
         }
 
         // --- Lógica para enviar el artículo a la base de datos ---
-        // Variable global para saber si estamos creando (null) o editando (un ID)
         let articuloEnEdicionId = null;
 
-        // --- ¡NUEVA FUNCIÓN! Preparar el formulario para editar ---
         window.prepararEdicion = async function (id) {
             try {
                 const respuesta = await fetch(`http://localhost:3000/api/articulos/${id}`);
                 const art = await respuesta.json();
 
-                // 1. Rellenamos las cajas de texto con la info de la base de datos
-                document.getElementById('post-titulo').value = art.titulo;
-                document.getElementById('post-categoria').value = art.categoria_id;
+                const inputTitulo = document.getElementById('post-titulo');
+                const inputCategoria = document.getElementById('post-categoria');
+                
+                if(inputTitulo) inputTitulo.value = art.titulo;
+                if(inputCategoria) inputCategoria.value = art.categoria_id;
 
-                // Ponemos el texto en el Mini-Word
-                if (typeof CKEDITOR !== 'undefined') {
+                if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances['post-contenido']) {
                     CKEDITOR.instances['post-contenido'].setData(art.contenido);
                 } else {
-                    document.getElementById('post-contenido').value = art.contenido;
+                    const inputContenido = document.getElementById('post-contenido');
+                    if(inputContenido) inputContenido.value = art.contenido;
                 }
 
-                // 2. Cambiamos el estado del sistema a "Modo Edición"
                 articuloEnEdicionId = art.id;
 
-                // 3. Cambiamos el aspecto del botón y del título
                 const botonForm = document.querySelector('#formulario-publicar button');
-                botonForm.innerText = "💾 Actualizar Artículo";
-                botonForm.style.background = "#FF9800";
-                botonForm.style.borderColor = "#E65100";
+                if(botonForm) {
+                    botonForm.innerText = "💾 Actualizar Artículo";
+                    botonForm.style.background = "#FF9800";
+                    botonForm.style.borderColor = "#E65100";
+                }
 
-                // Subimos la pantalla hacia arriba suavemente para que el usuario vea el formulario
                 window.scrollTo({ top: 0, behavior: 'smooth' });
 
-                document.getElementById('mensaje-publicacion').innerText = "Modo edición activado. Modifica y guarda.";
-                document.getElementById('mensaje-publicacion').style.color = "#FF9800";
-
+                const mensajePub = document.getElementById('mensaje-publicacion');
+                if(mensajePub) {
+                    mensajePub.innerText = "Modo edición activado. Modifica y guarda.";
+                    mensajePub.style.color = "#FF9800";
+                }
             } catch (error) {
-                alert("❌ Error al intentar cargar el artículo para editar.");
+                console.error("Error crítico en prepararEdicion:", error);
+                alert("❌ Error al intentar cargar el artículo. Revisa la consola (F12) para ver el origen exacto del problema.");
             }
         };
 
-        // --- Lógica mejorada para enviar el artículo (Sirve para Crear y Actualizar) ---
+        formPublicar.addEventListener('submit', async (evento) => {
+            evento.preventDefault();
+            const titulo = document.getElementById('post-titulo').value;
+            const categoria_id = document.getElementById('post-categoria').value;
+            const mensajePub = document.getElementById('mensaje-publicacion');
+
+            let contenidoHTML = "";
+            if (typeof CKEDITOR !== 'undefined') {
+                contenidoHTML = CKEDITOR.instances['post-contenido'].getData();
+            } else {
+                contenidoHTML = document.getElementById('post-contenido').value;
+            }
+
+            if (contenidoHTML.trim() === "") {
+                mensajePub.style.color = "red";
+                mensajePub.innerText = "❌ El contenido no puede estar vacío.";
+                return;
+            }
+
+            const metodo = articuloEnEdicionId ? 'PUT' : 'POST';
+            const url = articuloEnEdicionId
+                ? `http://localhost:3000/api/articulos/${articuloEnEdicionId}`
+                : 'http://localhost:3000/api/articulos';
+
+            try {
+                const respuesta = await fetch(url, {
+                    method: metodo,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        titulo: titulo,
+                        contenido: contenidoHTML,
+                        categoria_id: parseInt(categoria_id),
+                        autor_id: usuario.id
+                    })
+                });
+
+                if (respuesta.ok) {
+                    mensajePub.style.color = "green";
+                    mensajePub.innerText = articuloEnEdicionId ? "✅ ¡Artículo actualizado!" : "✅ ¡Artículo publicado!";
+
+                    document.getElementById('post-titulo').value = "";
+                    if (typeof CKEDITOR !== 'undefined') CKEDITOR.instances['post-contenido'].setData('');
+                    articuloEnEdicionId = null;
+
+                    const botonForm = document.querySelector('#formulario-publicar button');
+                    botonForm.innerText = "Publicar";
+                    botonForm.style.background = "#4CAF50";
+                    botonForm.style.borderColor = "#388E3C";
+
+                    cargarArticulosAdmin();
+                } else {
+                    mensajePub.style.color = "red";
+                    mensajePub.innerText = "❌ Hubo un error al guardar.";
+                }
+            } catch (error) {
+                mensajePub.style.color = "red";
+                mensajePub.innerText = "❌ Error de conexión con el servidor.";
+            }
+        });
+    } // <--- AHORA EL ELSE CIERRA CORRECTAMENTE AQUÍ ABAJO
+}
+
+// --- Lógica mejorada para enviar el artículo (Sirve para Crear y Actualizar) ---
+if (formPublicar) {
+    formPublicar.addEventListener('submit', async (evento) => {
+        evento.preventDefault();
+        
         formPublicar.addEventListener('submit', async (evento) => {
             evento.preventDefault();
 
@@ -605,8 +681,8 @@ cargarRolesMaestros();
                 mensajePub.style.color = "red";
                 mensajePub.innerText = "❌ Error de conexión con el servidor.";
             }
-        });
-    }
+        })})
+    };
 
 // --- LÓGICA DE LECTURA DE ARTÍCULO INDIVIDUAL Y COMENTARIOS ---
 async function cargarArticuloCompleto() {
@@ -689,13 +765,14 @@ async function cargarComentarios(articuloId) {
         }
 
         comentarios.forEach(com => {
-            // ¡NUEVA LÓGICA DE PERMISOS!
-            // Verificamos si el usuario actual es el dueño exacto de este comentario
+            // Normalizamos el rol por seguridad
+            const rolNormalizado = usuario ? usuario.rol.toLowerCase().trim() : '';
+            const esModerador = rolNormalizado === 'admin' || rolNormalizado === 'owner';
             const esMiComentario = usuario && usuario.nombre === com.autor;
 
             let botonBorrar = '';
-            // El botón aparece SI eres admin O SI es tu propio comentario
-            if (esAdmin || esMiComentario) {
+            // El botón aparece SI eres admin, owner O SI es tu propio comentario
+            if (esModerador || esMiComentario) {
                 botonBorrar = `<button onclick="borrarComentario(${com.id}, ${articuloId})" style="float: right; background: #d32f2f; color: white; border: 1px solid #b71c1c; cursor: pointer; font-size: 14px; padding: 2px 5px;">🗑️ Borrar</button>`;
             }
 
@@ -723,10 +800,11 @@ function activarFormularioComentario(articuloId) {
         const usuario = JSON.parse(localStorage.getItem('usuarioLogeado'));
 
         try {
+            // RESTAURADO AL ENDPOINT DE COMENTARIOS
             const respuesta = await fetch('http://localhost:3000/api/comentarios', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ articulo_id: parseInt(articuloId), autor_id: usuario.id, contenido: contenido })
+                body: JSON.stringify({ articulo_id: articuloId, autor_id: usuario.id, contenido: contenido })
             });
 
             if (respuesta.ok) {
@@ -910,37 +988,41 @@ window.eliminarCategoria = async function (id) {
 
 // Lógica para el botón de crear nueva categoría
 const formCategoria = document.getElementById('formulario-categoria');
-if (formCategoria) {
+const nuevaCategoriaInput = document.getElementById('nueva-categoria');
+const mensajeCategoria = document.getElementById('mensaje-categoria');
+
+if (formCategoria && nuevaCategoriaInput) {
     formCategoria.addEventListener('submit', async (evento) => {
         evento.preventDefault();
-        const nombre_categoria = document.getElementById('nueva-categoria').value;
-        const mensajeCat = document.getElementById('mensaje-categoria');
+        const nombre = nuevaCategoriaInput.value;
+        mensajeCategoria.innerText = "⏳ Creando categoría...";
+        mensajeCategoria.style.color = "orange";
 
         try {
             const respuesta = await fetch('http://localhost:3000/api/categorias', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ nombre_categoria })
+                // ¡AQUÍ ES DONDE IBA LA CORRECCIÓN REALMENTE!
+                body: JSON.stringify({ nombre_categoria: nombre }) 
             });
 
             if (respuesta.ok) {
-                mensajeCat.style.color = "green";
-                mensajeCat.innerText = "✅ Categoría añadida exitosamente.";
-                document.getElementById('nueva-categoria').value = ""; // Limpiamos la cajita
-
-                // ¡MAGIA! Recargamos el menú desplegable de arriba para que aparezca la nueva
-                cargarCategorias();
+                mensajeCategoria.style.color = "green";
+                mensajeCategoria.innerText = "✅ Categoría creada!";
+                nuevaCategoriaInput.value = "";
+                await cargarCategorias();
+                if (typeof cargarCategoriasAdmin === 'function') await cargarCategoriasAdmin();
             } else {
-                mensajeCat.style.color = "red";
-                mensajeCat.innerText = "❌ Error al añadir la categoría.";
+                mensajeCategoria.style.color = "red";
+                mensajeCategoria.innerText = "❌ Hubo un error al crear la categoría.";
             }
         } catch (error) {
-            mensajeCat.style.color = "red";
-            mensajeCat.innerText = "❌ Error de conexión con el servidor.";
+            console.error("Error al crear categoría:", error);
+            mensajeCategoria.style.color = "red";
+            mensajeCategoria.innerText = "❌ Error de conexión.";
         }
     });
 }
-
 // --- LÓGICA DEL BUSCADOR EN EL MENÚ PRINCIPAL ---
 const btnBuscar = document.getElementById('btn-buscar');
 const inputBusqueda = document.getElementById('input-busqueda');
