@@ -1,7 +1,34 @@
+@font-face {
+    font-family: 'FuenteMinecraft'; /* Este es el apodo que usaremos en el código */
+    src: url('fonts/Minecraft.ttf') format('truetype'); /* La ruta a tu archivo */
+    font-weight: normal;
+    font-style: normal;
+}
+
+:root {
+    --tamano-texto-normal: 10px; /* Tamaño general para párrafos */
+    --tamano-texto-titulos: 19px; /* Tamaño para los títulos <h2> o <h3> */
+    --tamano-texto-botones: 18px; /* Tamaño para los inputs y botones */
+}
+
+h1, h2, h3 {
+    font-size: var(--tamano-texto-titulos);
+    font-weight: normal; /* La fuente de Minecraft ya es gruesa, quitarle el negrito suele verse mejor */
+}
+
+a {
+    font-size: var(--tamano-texto-normal);
+}
+
 body { 
-    font-family: 'VT323', monospace; 
+    font-family: 'FuenteMinecraft', monospace;
+    font-size: var(--tamano-texto-normal); /* Aplicamos el tamaño general */
     background-color: #8b8b8b; 
-    background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0,0,0,0.05) 10px, rgba(0,0,0,0.05) 20px);
+    background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('img/bloqTierra.jpg');
+    background-repeat: repeat;
+    background-attachment: fixed;
+    background-size: 64px;
+    image-rendering: pixelated;
     margin: 0; 
     padding: 0; 
     color: #333;
@@ -282,4 +309,9 @@ header h1 { margin: 0; font-size: 40px; }
     border: 4px solid #388E3C;
     border-right: none;
     box-shadow: -4px 4px 10px rgba(0,0,0,0.5);
+}
+
+input, textarea, button, select {
+    font-family: 'FuenteMinecraft', monospace !important;
+    font-size: var(--tamano-texto-botones) !important;
 }

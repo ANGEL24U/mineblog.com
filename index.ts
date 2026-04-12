@@ -11,6 +11,9 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
+import dotenv = require('dotenv');
+dotenv.config();
+
 // --- CONFIGURACIÓN DE SUBIDA DE ARCHIVOS (MULTER) ---
 const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)){
@@ -44,15 +47,17 @@ const upload = multer({
 
 app.use('/uploads', express.static(uploadsDir));
 
+app.use(express.static(path.join(__dirname, 'public')));
+
 const puerto = 3000;
 
 // --- ¡NUEVA CONFIGURACIÓN DE LA BASE DE DATOS POSTGRESQL! ---
 const pool = new Pool({
-  user: 'angel', // Tu usuario en Arch Linux
-  host: '192.168.1.21', // Ej: '192.168.1.50' (La IP de tu máquina virtual)
-  database: 'minecraftblogdb', // El nombre de tu base de datos migrada
-  password: 'Xc3v_24', // La contraseña que le pusiste al usuario postgres
-  port: 5432, // El puerto oficial de PostgreSQL
+  user: process.env.DB_USER,
+  host: process.env.DB_HOST,
+  database: process.env.DB_NAME,
+  password: process.env.DB_PASSWORD,
+  port: parseInt(process.env.DB_PORT || '5432'),
 });
 
 pool.connect().then(() => {

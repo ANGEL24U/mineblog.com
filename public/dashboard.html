@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel de Administración - Minecraft Blog</title>
-    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -37,22 +36,22 @@
                     <form id="formulario-publicar">
                         <div style="margin-bottom: 15px;">
                             <label style="font-weight: bold;">Título del post:</label><br>
-                            <input type="text" id="post-titulo" required style="width: 95%; padding: 8px; font-family: 'VT323', monospace; font-size: 20px;">
+                            <input type="text" id="post-titulo" required style="width: 95%; padding: 8px; font-family: 'FuenteMinecraft', monospace; font-size: 20px;">
                         </div>
                         
                         <div style="margin-bottom: 15px;">
                             <label style="font-weight: bold;">Categoría:</label><br>
-                            <select id="post-categoria" style="width: 98%; padding: 8px; font-family: 'VT323', monospace; font-size: 20px;">
+                            <select id="post-categoria" style="width: 98%; padding: 8px; font-family: 'FuenteMinecraft', monospace; font-size: 20px;">
                                 <option value="1">Guías y Tutoriales</option>
                             </select>
                         </div>
 
                         <div style="margin-bottom: 15px;">
                             <label style="font-weight: bold;">Contenido (El cuerpo del post):</label><br>
-                            <textarea id="post-contenido" name="post-contenido" rows="10" required style="width: 95%; padding: 8px; font-family: 'VT323', monospace; font-size: 20px; resize: vertical;"></textarea>
+                            <textarea id="post-contenido" name="post-contenido" rows="10" required style="width: 95%; padding: 8px; font-family: 'FuenteMinecraft', monospace; font-size: 20px; resize: vertical;"></textarea>
                         </div>
 
-                        <button type="submit" style="background: #4CAF50; color: white; border: 4px solid #388E3C; padding: 10px 20px; font-family: 'VT323', monospace; font-size: 22px; cursor: pointer; text-shadow: 2px 2px 0px #000;">Publicar</button>
+                        <button type="submit" style="background: #4CAF50; color: white; border: 4px solid #388E3C; padding: 10px 20px; font-family: 'FuenteMinecraft', monospace; font-size: 22px; cursor: pointer; text-shadow: 2px 2px 0px #000;">Publicar</button>
                     </form>
                     
                     <p id="mensaje-publicacion" style="margin-top: 15px; font-weight: bold; font-size: 22px;"></p>
@@ -73,8 +72,8 @@
 
                             <div style="margin-bottom: 20px;">
                                 <input type="text" id="nuevo-rol-nombre" placeholder="Nombre (ej: moderador)" 
-                                    style="font-family: 'VT323'; font-size: 20px; padding: 10px; width: 60%;">
-                                <button onclick="crearNuevoRol()" style="background: #4CAF50; color: white; border: 2px solid #1B5E20; cursor: pointer; font-family: 'VT323'; font-size: 20px; padding: 8px 15px;">✨ Crear Rango</button>
+                                    style="font-family: 'FuenteMinecraft', monospace; font-size: 20px; padding: 10px; width: 60%;">
+                                <button onclick="crearNuevoRol()" style="background: #4CAF50; color: white; border: 2px solid #1B5E20; cursor: pointer; font-family: 'FuenteMinecraft', monospace; font-size: 20px; padding: 8px 15px;">✨ Crear Rango</button>
                             </div>
 
                             <div id="contenedor-permisos" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: #eee; padding: 15px; border: 2px inset #999; margin-bottom: 20px;">
@@ -94,12 +93,12 @@
                         <h2>🛡️ Gestión de Usuarios y Roles</h2>
                         <div style="background: #ccc; padding: 10px; border: 2px solid #555; margin-bottom: 10px;">
                             <label style="font-weight: bold;">Acción Masiva:</label>
-                            <select id="select-rol-masivo" style="padding: 5px; font-family: 'VT323'; font-size: 18px;">
+                            <select id="select-rol-masivo" style="padding: 5px; font-family: 'FuenteMinecraft', monospace; font-size: 18px;">
                                 <option value="usuario">Quitar permisos</option>
                                 <option value="escritor">Ascender a Escritor</option>
                                 <option value="admin">Ascender a Administrador</option>
                             </select>
-                            <button onclick="aplicarRolMasivo()" style="background: #2196F3; color: white; border: 2px solid #0D47A1; cursor: pointer; font-family: 'VT323'; font-size: 18px; padding: 5px 10px;">Aplicar Rol</button>
+                            <button onclick="aplicarRolMasivo()" style="background: #2196F3; color: white; border: 2px solid #0D47A1; cursor: pointer; font-family: 'FuenteMinecraft', monospace; font-size: 18px; padding: 5px 10px;">Aplicar Rol</button>
                         </div>
 
                         <div id="admin-lista-usuarios" style="text-align: left; background: #eee; border: 2px solid #555; padding: 10px; max-height: 250px; overflow-y: auto;">
@@ -110,8 +109,8 @@
                         
                         <h2>🏷️ Añadir Nuevas Categorías</h2>
                         <form id="formulario-categoria" style="background: #eee; border: 2px solid #555; padding: 15px; text-align: left;">                        
-                            <input type="text" id="nueva-categoria" required placeholder="Ej: Texturas HD..." style="width: 60%; padding: 8px; font-family: 'VT323', monospace; font-size: 20px;">
-                            <button type="submit" style="background: #FF9800; color: white; border: 3px solid #E65100; cursor: pointer; font-family: 'VT323'; font-size: 20px; padding: 8px 15px;">➕ Crear Categoría</button>
+                            <input type="text" id="nueva-categoria" required placeholder="Ej: Texturas HD..." style="width: 60%; padding: 8px; font-family: 'FuenteMinecraft', monospace; font-size: 20px;">
+                            <button type="submit" style="background: #FF9800; color: white; border: 3px solid #E65100; cursor: pointer; font-family: 'FuenteMinecraft', monospace; font-size: 20px; padding: 8px 15px;">➕ Crear Categoría</button>
                             <p id="mensaje-categoria" style="margin-top: 10px; font-weight: bold;"></p>
                         </form>
 

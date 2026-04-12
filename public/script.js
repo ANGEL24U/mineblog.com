@@ -18,7 +18,7 @@ async function cargarArticulos(terminoBusqueda = "") {
         let paginaActual = parseInt(urlParams.get('pagina')) || 1;
 
         // 2. CONSTRUIMOS LA URL DEL SERVIDOR 
-        let fetchUrl = `http://localhost:3000/api/articulos?pagina=${paginaActual}&buscar=${terminoBusqueda}`;
+        let fetchUrl = `/api/articulos?pagina=${paginaActual}&buscar=${terminoBusqueda}`;
 
         const respuesta = await fetch(fetchUrl);
 
@@ -41,7 +41,7 @@ async function cargarArticulos(terminoBusqueda = "") {
                 <div class="articulo" style="text-align: center; padding: 30px;">
                     <h2 style="color: #d32f2f;">Sin resultados 😢</h2>
                     <p style="font-size: 22px;">${mensajeError}</p>
-                    <button onclick="window.location.href='index.html'" style="margin-top: 15px; background: #388E3C; color: white; border: 2px solid #1B5E20; font-family: 'VT323'; font-size: 20px; cursor: pointer; padding: 5px 15px;">Ver todo</button>
+                    <button onclick="window.location.href='index.html'" style="margin-top: 15px; background: #388E3C; color: white; border: 2px solid #1B5E20; font-family: 'FuenteMinecraft'; font-size: 20px; cursor: pointer; padding: 5px 15px;">Ver todo</button>
                 </div>`;
             if (controlesPaginacion) controlesPaginacion.style.display = 'none';
             return;
@@ -127,7 +127,7 @@ if (formLogin) {
         mensajeError.innerText = "";
 
         try {
-            const respuesta = await fetch('http://localhost:3000/api/login', {
+            const respuesta = await fetch('/api/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ correo, contrasena })
@@ -168,7 +168,7 @@ if (formRegistro) {
 
         try {
             // Tocamos la ruta POST de registro de tu API
-            const respuesta = await fetch('http://localhost:3000/api/registro', {
+            const respuesta = await fetch('/api/registro', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ nombre_usuario, correo, contrasena })
@@ -220,10 +220,13 @@ function verificarSesion() {
             </div>`;
         }
 
+        // Le damos un valor por defecto en caso de que venga nulo desde la base de datos
+        const rolSeguro = usuario.rol || 'usuario';
+
         // Agregamos el nombre y el rango (esto siempre se ve)
         htmlPerfil += `
             <p style="margin-bottom: 5px;">Bienvenido, <b>${usuario.nombre}</b></p>
-            <p style="margin-top: 0;">Rango: <span class="categoria" style="background: ${usuario.rol === 'admin' ? '#d32f2f' : '#388E3C'}">${usuario.rol.toUpperCase()}</span></p>
+            <p style="margin-top: 0;">Rango: <span class="categoria" style="background: ${rolSeguro === 'admin' || rolSeguro === 'owner' ? '#d32f2f' : '#388E3C'}">${rolSeguro.toUpperCase()}</span></p>
             <ul class="sidebar-links">
         `;
 
@@ -269,7 +272,7 @@ async function cargarRolesMaestros() {
     if (!tablaRoles) return;
 
     try {
-        const respuesta = await fetch('http://localhost:3000/api/roles');
+        const respuesta = await fetch('/api/roles');
         const roles = await respuesta.json();
 
         // 1. Limpiamos la lista visual y el selector
@@ -313,7 +316,7 @@ window.crearNuevoRol = async function() {
     const permisosSeleccionados = Array.from(checkboxes).map(cb => cb.value);
 
     try {
-        const respuesta = await fetch('http://localhost:3000/api/roles', {
+        const respuesta = await fetch('/api/roles', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ nombre: nombreInput.value.toLowerCase(), permisos: permisosSeleccionados })
@@ -336,7 +339,7 @@ async function cargarArticulosAdmin() {
     const usuario = JSON.parse(usuarioData);
 
     try {
-        const respuesta = await fetch('http://localhost:3000/api/articulos');
+        const respuesta = await fetch('/api/articulos');
         const paqueteDatos = await respuesta.json(); 
         const articulos = paqueteDatos.articulos;
         listaAdmin.innerHTML = '';
@@ -409,7 +412,7 @@ window.crearNuevoRol = async function() {
     const permisosSeleccionados = Array.from(checkboxes).map(cb => cb.value);
 
     try {
-        const respuesta = await fetch('http://localhost:3000/api/roles', {
+        const respuesta = await fetch('/api/roles', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -443,7 +446,7 @@ cargarRolesMaestros();
         // Un pequeño popup de seguridad antes de borrar
         if (confirm("¿Estás seguro de que quieres eliminar este artículo permanentemente?")) {
             try {
-                const respuesta = await fetch(`http://localhost:3000/api/articulos/${id}`, {
+                const respuesta = await fetch(`/api/articulos/${id}`, {
                     method: 'DELETE'
                 });
 
@@ -511,7 +514,7 @@ if (zonaDashboard) {
 
         window.prepararEdicion = async function (id) {
             try {
-                const respuesta = await fetch(`http://localhost:3000/api/articulos/${id}`);
+                const respuesta = await fetch(`/api/articulos/${id}`);
                 const art = await respuesta.json();
 
                 const inputTitulo = document.getElementById('post-titulo');
@@ -570,8 +573,8 @@ if (zonaDashboard) {
 
             const metodo = articuloEnEdicionId ? 'PUT' : 'POST';
             const url = articuloEnEdicionId
-                ? `http://localhost:3000/api/articulos/${articuloEnEdicionId}`
-                : 'http://localhost:3000/api/articulos';
+                ? `/api/articulos/${articuloEnEdicionId}`
+                : '/api/articulos';
 
             try {
                 const respuesta = await fetch(url, {
@@ -641,8 +644,8 @@ if (formPublicar) {
             // DECISIÓN INTELIGENTE: ¿Es un POST (Crear) o un PUT (Actualizar)?
             const metodo = articuloEnEdicionId ? 'PUT' : 'POST';
             const url = articuloEnEdicionId
-                ? `http://localhost:3000/api/articulos/${articuloEnEdicionId}`
-                : 'http://localhost:3000/api/articulos';
+                ? `/api/articulos/${articuloEnEdicionId}`
+                : '/api/articulos';
 
             try {
                 const respuesta = await fetch(url, {
@@ -698,7 +701,7 @@ async function cargarArticuloCompleto() {
     }
 
     try {
-        const respuesta = await fetch(`http://localhost:3000/api/articulos/${id}`);
+        const respuesta = await fetch(`/api/articulos/${id}`);
         if (!respuesta.ok) throw new Error("No encontrado");
         const art = await respuesta.json();
 
@@ -709,8 +712,8 @@ async function cargarArticuloCompleto() {
         if (usuarioGuardado) {
             formComentarioHTML = `
                 <form id="formulario-comentario" style="margin-top: 15px;">
-                    <textarea id="texto-comentario" rows="3" placeholder="Escribe tu comentario aquí..." required style="width: 100%; padding: 8px; font-family: 'VT323', monospace; font-size: 18px; resize: vertical; box-sizing: border-box;"></textarea>
-                    <button type="submit" style="margin-top: 5px; background: #4CAF50; color: white; border: 2px solid #388E3C; cursor: pointer; font-family: 'VT323'; font-size: 18px; padding: 5px 15px;">Enviar Comentario</button>
+                    <textarea id="texto-comentario" rows="3" placeholder="Escribe tu comentario aquí..." required style="width: 100%; padding: 8px; font-family: 'FuenteMinecraft', monospace; font-size: 18px; resize: vertical; box-sizing: border-box;"></textarea>
+                    <button type="submit" style="margin-top: 5px; background: #4CAF50; color: white; border: 2px solid #388E3C; cursor: pointer; font-family: 'FuenteMinecraft'; font-size: 18px; padding: 5px 15px;">Enviar Comentario</button>
                 </form>
             `;
         }
@@ -754,7 +757,7 @@ async function cargarComentarios(articuloId) {
     const esAdmin = usuario && usuario.rol === 'admin';
 
     try {
-        const respuesta = await fetch(`http://localhost:3000/api/articulos/${articuloId}/comentarios`);
+        const respuesta = await fetch(`/api/articulos/${articuloId}/comentarios`);
         const comentarios = await respuesta.json();
 
         lista.innerHTML = '';
@@ -801,7 +804,7 @@ function activarFormularioComentario(articuloId) {
 
         try {
             // RESTAURADO AL ENDPOINT DE COMENTARIOS
-            const respuesta = await fetch('http://localhost:3000/api/comentarios', {
+            const respuesta = await fetch('/api/comentarios', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ articulo_id: articuloId, autor_id: usuario.id, contenido: contenido })
@@ -823,7 +826,7 @@ function activarFormularioComentario(articuloId) {
 window.borrarComentario = async function (id, articuloId) {
     if (confirm("¿Seguro que deseas eliminar este comentario?")) {
         try {
-            const respuesta = await fetch(`http://localhost:3000/api/comentarios/${id}`, { method: 'DELETE' });
+            const respuesta = await fetch(`/api/comentarios/${id}`, { method: 'DELETE' });
             if (respuesta.ok) {
                 cargarComentarios(articuloId); // Recargamos para que desaparezca
             } else {
@@ -844,7 +847,7 @@ async function cargarUsuariosAdmin() {
     if (!listaUsuarios) return;
 
     try {
-        const respuesta = await fetch('http://localhost:3000/api/usuarios');
+        const respuesta = await fetch('/api/usuarios');
         const usuarios = await respuesta.json();
 
         listaUsuarios.innerHTML = '';
@@ -863,7 +866,7 @@ async function cargarUsuariosAdmin() {
                                 <input type="checkbox" class="chk-usuario" value="${user.id}" style="transform: scale(1.5); margin-right: 10px;">
                                 <span style="font-size: 18px; color: ${colorNombre}"><b>${user.nombre_usuario}</b> (${user.correo}) - Rol: <b>${user.rol || 'usuario'}</b></span>
                             </div>
-                            <button onclick="cambiarEstadoUsuario(${user.id}, '${nuevoEstado}')" style="background: ${colorBoton}; color: white; border: 2px solid #000; cursor: pointer; font-family: 'VT323'; font-size: 18px; padding: 5px 10px;">${textoBoton}</button>
+                            <button onclick="cambiarEstadoUsuario(${user.id}, '${nuevoEstado}')" style="background: ${colorBoton}; color: white; border: 2px solid #000; cursor: pointer; font-family: 'FuenteMinecraft'; font-size: 18px; padding: 5px 10px;">${textoBoton}</button>
                         </div>
                     `;
         });
@@ -886,7 +889,7 @@ window.aplicarRolMasivo = async function () {
 
     if (confirm(`¿Ascender a los ${idsSeleccionados.length} usuarios seleccionados al rol de ${nuevoRol.toUpperCase()}?`)) {
         try {
-            const respuesta = await fetch('http://localhost:3000/api/usuarios/roles', {
+            const respuesta = await fetch('/api/usuarios/roles', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ ids: idsSeleccionados, nuevoRol: nuevoRol })
@@ -910,7 +913,7 @@ cargarUsuariosAdmin(); // Ejecutamos la carga
 window.cambiarEstadoUsuario = async function (id, nuevoEstado) {
     if (confirm(`¿Seguro que quieres cambiar el estado de este usuario a ${nuevoEstado.toUpperCase()}?`)) {
         try {
-            const respuesta = await fetch(`http://localhost:3000/api/usuarios/${id}/estado`, {
+            const respuesta = await fetch(`/api/usuarios/${id}/estado`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ estado: nuevoEstado })
@@ -935,7 +938,7 @@ async function cargarCategorias() {
     if (!selectCategoria) return;
 
     try {
-        const respuesta = await fetch('http://localhost:3000/api/categorias');
+        const respuesta = await fetch('/api/categorias');
         const categorias = await respuesta.json();
 
         // 1. Llenamos el menú desplegable (como antes)
@@ -970,7 +973,7 @@ cargarCategorias();
 window.eliminarCategoria = async function (id) {
     if (confirm("¿Seguro que deseas eliminar esta categoría? Si tiene artículos, no podrás hacerlo.")) {
         try {
-            const respuesta = await fetch(`http://localhost:3000/api/categorias/${id}`, {
+            const respuesta = await fetch(`/api/categorias/${id}`, {
                 method: 'DELETE'
             });
 
@@ -999,7 +1002,7 @@ if (formCategoria && nuevaCategoriaInput) {
         mensajeCategoria.style.color = "orange";
 
         try {
-            const respuesta = await fetch('http://localhost:3000/api/categorias', {
+            const respuesta = await fetch('/api/categorias', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 // ¡AQUÍ ES DONDE IBA LA CORRECCIÓN REALMENTE!
@@ -1064,7 +1067,7 @@ if (formPerfil) {
         const fotoActual = usuario.foto_perfil || 'img/steve.png';
 
         // ¡OJO! Si la foto empieza con '/uploads/', debemos sumarle el servidor (localhost:3000)
-        const urlFotoCompleta = fotoActual.startsWith('/uploads/') ? `http://localhost:3000${fotoActual}` : fotoActual;
+        const urlFotoCompleta = fotoActual.startsWith('/uploads/') ? `/api${fotoActual}` : fotoActual;
         document.getElementById('preview-avatar').src = urlFotoCompleta;
 
         // B. Lógica del Botón y el Input de Archivo invisible
@@ -1116,7 +1119,7 @@ if (formPerfil) {
                 mensaje.style.color = "blue";
 
                 // Enviamos el FormData. ¡NOTA IMPORTANTE! Fetch pone el Header 'multipart/form-data' automáticamente, no lo escribas tú.
-                const respuesta = await fetch(`http://localhost:3000/api/usuarios/${usuario.id}/perfil`, {
+                const respuesta = await fetch(`/api/usuarios/${usuario.id}/perfil`, {
                     method: 'PUT',
                     body: datosEnviar // Enviamos el FormData directamente
                 });
@@ -1169,7 +1172,7 @@ async function cargarPerfilPublico() {
 
     try {
         // 1. CARGAMOS DATOS DEL PERFIL (Igual que antes)
-        const respuesta = await fetch(`http://localhost:3000/api/usuarios/publico/${nombreUsuarioURL}`);
+        const respuesta = await fetch(`/api/usuarios/publico/${nombreUsuarioURL}`);
         if (!respuesta.ok) throw new Error("No encontrado");
         const perfil = await respuesta.json();
 
@@ -1188,7 +1191,7 @@ async function cargarPerfilPublico() {
         // 2. ¡NUEVO! CARGAMOS ARTÍCULOS ESCRITOS POR EL USUARIO
         const listaArticulos = document.getElementById('lista-articulos-perfil');
         try {
-            const resArticulos = await fetch(`http://localhost:3000/api/articulos/usuario/${nombreUsuarioURL}`);
+            const resArticulos = await fetch(`/api/articulos/usuario/${nombreUsuarioURL}`);
             const articulos = await resArticulos.json();
 
             listaArticulos.innerHTML = ''; // Limpiamos "Cargando..."
@@ -1227,7 +1230,7 @@ async function cargarPerfilPublico() {
                     const nuevoEstado = esBaneado ? 'activo' : 'baneado';
                     if (confirm(`¿Seguro que quieres bamear/reactivar a ${perfil.nombre_usuario}?`)) {
                         try {
-                            const resBan = await fetch(`http://localhost:3000/api/usuarios/${perfil.id}/estado`, {
+                            const resBan = await fetch(`/api/usuarios/${perfil.id}/estado`, {
                                 method: 'PUT',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({ estado: nuevoEstado })
