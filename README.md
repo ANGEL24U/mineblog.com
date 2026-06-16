@@ -8,13 +8,18 @@ Ademas de poder subir mods, texturas y poder jugar una version demo del mismo ju
 poder hacer amigos.
 
 Tecnologías:
--Frontend: 
-HTML, CSS y JavaScript (nativo)
--Bakcend:
-TypeScript + PostgreSQL (Base de datos desde Arch Linux)
+
+Frontend:
+
+-HTML, CSS y JavaScript (nativo)
+
+Bakcend:
+
+-TypeScript + PostgreSQL (Base de datos desde Arch Linux)
 
 Frameworks:
-Backend: Express + NodeJS
+
+-Backend: Express + NodeJS
 
 Nota:
 Esta web aun esta en fase de desarrollo, por lo que puede tener errores de diseño y de creación de datos en la base de datos.
