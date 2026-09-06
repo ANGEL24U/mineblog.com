@@ -15,7 +15,7 @@ Frontend:
 
 Bakcend:
 
--TypeScript + PostgreSQL (Base de datos desde Arch Linux)
+-TypeScript + PostgreSQL (Supabase)
 
 Frameworks:
 
