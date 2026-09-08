@@ -19,7 +19,7 @@ Bakcend:
 
 Frameworks:
 
--Backend: Express + NodeJS
+-Backend: NodeJS
 
 Nota:
 Esta web aun esta en fase de desarrollo, por lo que puede tener errores de diseño y de creación de datos en la base de datos.
